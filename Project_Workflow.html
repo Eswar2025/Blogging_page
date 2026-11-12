@@ -1,0 +1,3643 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A sixty-minute, offline project field guide for the AI and human blogging DBMS project: architecture, MySQL, transactions, Codex prompts, verification, and presentation."
+    />
+    <title>Project field guide · AI &amp; human blogging DBMS</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --surface: #1a1a1a;
+        --surface-2: #1f1f1f;
+        --line: #1f1f1f;
+        --line-strong: #3a3a3a;
+        --control-border: #6a6a6a;
+        --text: #fffaf0;
+        --body: #e5e5e5;
+        --muted: #9a9a9a;
+        --faint: #6a6a6a;
+        --primary: #fffaf0;
+        --on-primary: #0a0a0a;
+      }
+      [data-theme="light"] {
+        color-scheme: light;
+        --bg: #fffaf0;
+        --surface: #faf5e8;
+        --surface-2: #ebe6d6;
+        --line: #ebe6d6;
+        --line-strong: #9a9a9a;
+        --control-border: #6a6a6a;
+        --text: #0a0a0a;
+        --body: #1a1a1a;
+        --muted: #6a6a6a;
+        --faint: #9a9a9a;
+        --primary: #0a0a0a;
+        --on-primary: #fffaf0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 88px;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--body);
+        font:
+          1rem/1.7 Inter,
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      a {
+        color: var(--text);
+        text-underline-offset: 4px;
+      }
+      a:hover {
+        text-decoration-thickness: 2px;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      button,
+      a,
+      input,
+      select,
+      textarea,
+      summary {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 3px;
+      }
+      button,
+      .pill {
+        min-height: 48px;
+        border: 1px solid var(--control-border);
+        border-radius: 999px;
+        background: transparent;
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      button:hover,
+      .pill:hover {
+        border-color: var(--primary);
+      }
+      button[aria-pressed="true"],
+      .filled {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-color: var(--primary);
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        color: var(--text);
+        margin: 0;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        line-height: 1.1;
+        letter-spacing: -0.035em;
+        max-width: 760px;
+      }
+      h2 {
+        font-size: 1.75rem;
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+      }
+      h3 {
+        font-size: 1.25rem;
+        line-height: 1.35;
+      }
+      h4 {
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+      p {
+        margin: 12px 0 0;
+      }
+      ul,
+      ol {
+        margin: 12px 0 0;
+        padding-left: 24px;
+      }
+      li + li {
+        margin-top: 8px;
+      }
+      strong {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .eyebrow {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .muted,
+      .small {
+        color: var(--muted);
+      }
+      .small {
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+      .lead {
+        font-size: 1.125rem;
+        line-height: 1.6;
+        color: var(--muted);
+        max-width: 760px;
+      }
+      .skip {
+        position: fixed;
+        top: -80px;
+        left: 16px;
+        z-index: 20;
+        background: var(--primary);
+        color: var(--on-primary);
+        padding: 12px 16px;
+        border-radius: 8px;
+      }
+      .skip:focus {
+        top: 8px;
+      }
+      .topbar {
+        min-height: 56px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--line);
+        background: var(--bg);
+        background: color-mix(in srgb, var(--bg) 94%, transparent);
+        backdrop-filter: blur(12px);
+      }
+      .bar-inner {
+        max-width: 1440px;
+        margin: auto;
+        padding: 0 32px;
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .brand {
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .bar-tools {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .search-wrap {
+        position: relative;
+      }
+      .search-wrap input {
+        width: 240px;
+        min-height: 48px;
+        border: 1px solid var(--control-border);
+        border-radius: 999px;
+        background: transparent;
+        padding: 8px 16px;
+        font-size: 1rem;
+      }
+      .search-wrap input::placeholder {
+        color: var(--muted);
+      }
+      .layout {
+        max-width: 1440px;
+        padding: 48px 32px 64px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 224px minmax(0, 1fr);
+        gap: 48px;
+      }
+      .sidebar {
+        align-self: start;
+        position: sticky;
+        top: 88px;
+        max-height: calc(100vh - 120px);
+        overflow: auto;
+      }
+      .sidebar nav {
+        display: grid;
+        gap: 4px;
+        margin: 16px 0 24px;
+      }
+      .sidebar nav a {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        border-left: 2px solid var(--line);
+        padding: 8px 12px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+      .sidebar nav a.active {
+        border-color: var(--primary);
+        color: var(--text);
+      }
+      .sidebar nav a.done::after {
+        content: " / learned";
+        font-size: 0.75rem;
+      }
+      .study-progress {
+        width: 100%;
+        height: 4px;
+        accent-color: var(--primary);
+        margin: 12px 0 8px;
+      }
+      .sidebar-foot {
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+      }
+      main {
+        min-width: 0;
+      }
+      .hero {
+        padding-bottom: 32px;
+      }
+      .hero .eyebrow {
+        margin-bottom: 24px;
+      }
+      .hero h1 + p {
+        margin-top: 24px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 24px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 32px;
+      }
+      .stat {
+        padding: 24px;
+        border-right: 1px solid var(--line-strong);
+      }
+      .stat:last-child {
+        border: 0;
+      }
+      .stat strong {
+        display: block;
+        font-size: 1.75rem;
+        line-height: 1.1;
+        margin-bottom: 8px;
+      }
+      .stat span {
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      .callout {
+        border-left: 3px solid var(--primary);
+        background: var(--surface);
+        padding: 16px 24px;
+        border-radius: 0 12px 12px 0;
+        margin-top: 24px;
+      }
+      .callout p:first-child {
+        margin: 0;
+      }
+      .callout .small {
+        margin-top: 8px;
+      }
+      .orientation {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .topic-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        min-width: 0;
+      }
+      .topic-card:hover,
+      .topic-card:target {
+        border-color: var(--line-strong);
+      }
+      .topic-card p,
+      .topic-card li,
+      .reading-block p,
+      .reading-block li {
+        max-width: 72ch;
+      }
+      .topic-card .eyebrow {
+        margin: 0 0 12px;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .grid .topic-card {
+        height: 100%;
+      }
+      .chapter {
+        padding-top: 48px;
+        margin-top: 32px;
+        border-top: 1px solid var(--line);
+        scroll-margin-top: 32px;
+      }
+      .chapter-header {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        margin-bottom: 24px;
+      }
+      .numeral {
+        font-size: 3rem;
+        line-height: 1;
+        color: var(--muted);
+        font-weight: 600;
+        min-width: 64px;
+      }
+      .chapter-title {
+        flex: 1;
+        min-width: 0;
+      }
+      .chapter-title .eyebrow {
+        margin-bottom: 8px;
+      }
+      .chapter-title p {
+        margin-top: 12px;
+      }
+      .learned-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .chapter > .topic-card {
+        margin-top: 16px;
+      }
+      .chapter > .topic-card:first-of-type {
+        margin-top: 0;
+      }
+      .go-deeper {
+        font-size: 0.875rem;
+        color: var(--muted);
+        margin-top: 24px;
+      }
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 24px;
+        font-size: 0.875rem;
+      }
+      .pager a {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+      }
+      .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        margin-top: 16px;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        text-align: left;
+      }
+      th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      th,
+      td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      th {
+        background: var(--surface);
+      }
+      td:first-child {
+        color: var(--text);
+      }
+      code,
+      pre {
+        font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+      }
+      code {
+        font-size: 0.9em;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        white-space: pre;
+        overflow-x: auto;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0 0;
+        color: var(--body);
+      }
+      pre code {
+        font-size: inherit;
+        overflow-wrap: normal;
+      }
+      .tree {
+        line-height: 1.7;
+      }
+      details {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px 24px;
+        margin-top: 16px;
+      }
+      summary {
+        min-height: 48px;
+        padding: 12px 0;
+        cursor: pointer;
+        color: var(--text);
+        font-weight: 500;
+      }
+      details[open] > summary {
+        margin-bottom: 16px;
+      }
+      .roadmap-shell {
+        margin-top: 32px;
+      }
+      .roadmap {
+        display: grid;
+        gap: 32px;
+        padding: 32px 0 16px;
+      }
+      .map-row {
+        display: grid;
+        grid-template-columns: 1fr minmax(200px, 1.2fr) 1fr;
+        gap: 24px;
+        align-items: center;
+        position: relative;
+      }
+      .stage-node {
+        min-height: 48px;
+        grid-column: 2;
+        position: relative;
+        z-index: 1;
+        background: var(--surface);
+        border: 1px solid var(--control-border);
+        border-radius: 12px;
+        text-decoration: none;
+        text-align: center;
+        padding: 12px 16px;
+        display: block;
+      }
+      .stage-node:hover,
+      .stage-node[aria-current="location"] {
+        border-color: var(--primary);
+      }
+      .stage-node span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+      }
+      .stage-node.learned {
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .stage-node.learned span {
+        color: var(--on-primary);
+      }
+      .map-row:not(:last-child)::after {
+        content: "↓";
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        height: 32px;
+        display: grid;
+        align-content: center;
+        color: var(--muted);
+        font-size: 1.5rem;
+      }
+      .branch {
+        min-height: 48px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        border: 1px solid var(--control-border);
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: var(--muted);
+        text-decoration: none;
+        position: relative;
+      }
+      .branch.left {
+        grid-column: 1;
+        grid-row: 1;
+        text-align: right;
+      }
+      .branch.right {
+        grid-column: 3;
+        grid-row: 1;
+      }
+      .branch::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 24px;
+        border-top: 1.5px dashed var(--faint);
+      }
+      .branch.left::after {
+        left: 100%;
+        border-radius: 0 0 12px 0;
+      }
+      .branch.right::after {
+        right: 100%;
+        border-radius: 12px 0 0 0;
+      }
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .flow-node {
+        border: 1px solid var(--line-strong);
+        background: var(--surface);
+        border-radius: 8px;
+        padding: 16px 12px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        position: relative;
+      }
+      .flow-node strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+      .flow-node:not(:last-child)::after {
+        content: "→";
+        position: absolute;
+        right: -8px;
+        top: 4px;
+        color: var(--muted);
+      }
+      .step-list {
+        counter-reset: steps;
+        padding: 0;
+        list-style: none;
+      }
+      .step-list li {
+        counter-increment: steps;
+        padding: 0 0 16px 48px;
+        position: relative;
+        border-bottom: 1px solid var(--line);
+        margin-top: 16px;
+      }
+      .step-list li::before {
+        content: counter(steps, decimal-leading-zero);
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: var(--muted);
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 0.875rem;
+      }
+      .step-list li:last-child {
+        border: 0;
+        padding-bottom: 0;
+      }
+      .prompt-block {
+        position: relative;
+      }
+      .copy-btn {
+        margin-top: 12px;
+      }
+      .checkpoint {
+        margin-top: 16px;
+      }
+      .demo-panel {
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 16px;
+      }
+      .demo-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: end;
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+        flex: 1;
+        min-width: 160px;
+      }
+      .field label,
+      .field > span {
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      select,
+      textarea {
+        min-height: 48px;
+        border: 1px solid var(--control-border);
+        border-radius: 8px;
+        background: var(--surface-2);
+        color: var(--body);
+        padding: 8px 12px;
+        max-width: 100%;
+        font-size: 1rem;
+      }
+      textarea::placeholder {
+        color: var(--body);
+        opacity: 1;
+      }
+      select {
+        width: 100%;
+      }
+      .demo-result {
+        min-height: 120px;
+        margin-top: 24px;
+        border-top: 1px solid var(--line-strong);
+        padding-top: 16px;
+      }
+      .demo-counts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 16px;
+      }
+      .demo-counts > div {
+        padding: 12px 16px;
+        border-right: 1px solid var(--line-strong);
+      }
+      .demo-counts > div:last-child {
+        border: 0;
+      }
+      .demo-counts strong {
+        font-size: 1.75rem;
+        display: block;
+        line-height: 1.1;
+        margin-bottom: 8px;
+      }
+      .demo-counts span {
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      .op-card {
+        margin-top: 16px;
+      }
+      .op-card h4 {
+        font-size: 1.25rem;
+      }
+      .op-card ul {
+        padding-left: 24px;
+      }
+      .file-label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        margin-top: 12px;
+      }
+      .checklist {
+        list-style: none;
+        padding: 0;
+      }
+      .checklist li {
+        margin-top: 12px;
+      }
+      .checklist label {
+        min-height: 48px;
+        padding: 8px 0;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        cursor: pointer;
+      }
+      .checklist input {
+        margin-top: 4px;
+        accent-color: var(--primary);
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+      }
+      .notes {
+        width: 100%;
+        min-height: 160px;
+        resize: vertical;
+        line-height: 1.7;
+        margin-top: 12px;
+      }
+      .source-list {
+        font-size: 0.875rem;
+      }
+      .source-list a {
+        overflow-wrap: anywhere;
+      }
+      .status-line {
+        font-size: 0.875rem;
+        color: var(--muted);
+        min-height: 24px;
+        margin-top: 12px;
+      }
+      .no-results {
+        padding: 32px;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        margin-top: 24px;
+      }
+      .footer {
+        border-top: 1px solid var(--line);
+        padding-top: 32px;
+        margin-top: 48px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .js-only {
+        display: none;
+      }
+      .js .js-only {
+        display: inline-flex;
+      }
+      .js .js-block {
+        display: block;
+      }
+      .source-note {
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      @media (min-width: 1100px) {
+        .main-content {
+          max-width: 1000px;
+        }
+      }
+      @media (max-width: 1099px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+          max-width: 1000px;
+        }
+        .sidebar {
+          display: none;
+        }
+        .bar-inner {
+          max-width: 1000px;
+        }
+        .chapter-header {
+          gap: 16px;
+        }
+      }
+      @media (max-width: 700px) {
+        .bar-inner {
+          padding: 0 16px;
+          gap: 8px;
+        }
+        .brand {
+          font-size: 0.75rem;
+          letter-spacing: 0;
+          max-width: 80px;
+          white-space: normal;
+          line-height: 1.4;
+        }
+        .search-wrap input {
+          width: clamp(96px, 25vw, 160px);
+        }
+        .bar-tools {
+          gap: 4px;
+        }
+        .bar-tools button {
+          padding: 8px 12px;
+        }
+        .print-button {
+          display: none !important;
+        }
+        .layout {
+          padding: 32px 16px 48px;
+        }
+        .hero .eyebrow {
+          margin-bottom: 16px;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .stat {
+          padding: 16px;
+        }
+        .stat:nth-child(2) {
+          border-right: 0;
+        }
+        .stat:nth-child(-n + 2) {
+          border-bottom: 1px solid var(--line-strong);
+        }
+        .orientation,
+        .grid.two,
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+        .chapter-header {
+          flex-wrap: wrap;
+        }
+        .numeral {
+          min-width: 48px;
+        }
+        .chapter-title {
+          flex-basis: calc(100% - 64px);
+        }
+        .learned-btn {
+          margin-left: 64px;
+        }
+        .topic-card,
+        .demo-panel {
+          padding: 16px;
+        }
+        .chapter {
+          padding-top: 32px;
+        }
+        .flow {
+          grid-template-columns: 1fr;
+        }
+        .flow-node:not(:last-child)::after {
+          content: "↓";
+          right: 16px;
+          top: auto;
+          bottom: -8px;
+        }
+        .branch {
+          display: none;
+        }
+        .map-row {
+          grid-template-columns: 1fr;
+        }
+        .stage-node {
+          grid-column: 1;
+        }
+        .map-row:not(:last-child)::after {
+          left: 50%;
+        }
+        .roadmap-shell {
+          padding: 16px;
+        }
+        .demo-counts > div {
+          padding: 12px 8px;
+        }
+        .demo-counts span {
+          font-size: 0.75rem;
+        }
+        .footer {
+          margin-top: 32px;
+        }
+        .table-wrap table {
+          min-width: 600px;
+        }
+      }
+      @media (max-width: 380px) {
+        .search-wrap input {
+          width: 96px;
+        }
+        .brand {
+          max-width: 64px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+      .reading-block {
+        min-width: 0;
+        margin-top: 24px;
+        padding: 8px 0;
+      }
+      .reading-block h3 {
+        margin-bottom: 16px;
+      }
+      .chapter > .reading-block {
+        margin-top: 24px;
+      }
+      .mobile-nav {
+        display: none;
+      }
+      .jump-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .jump-controls select {
+        flex: 1;
+        min-width: 0;
+      }
+      .jump-controls button {
+        flex-shrink: 0;
+        min-width: 48px;
+      }
+      .js .mobile-nav {
+        display: none;
+      }
+      .mobile-nav .field {
+        min-width: 0;
+      }
+      .mobile-nav select {
+        width: 100%;
+      }
+      @media (max-width: 1099px) {
+        .js .mobile-nav {
+          display: block;
+          max-width: 1000px;
+          margin: auto;
+          padding: 16px 32px;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+      @media (max-width: 700px) {
+        .js .mobile-nav {
+          padding: 16px;
+        }
+        .bar-tools button {
+          min-width: 48px;
+        }
+        .bar-inner {
+          flex-wrap: wrap;
+          padding-top: 4px;
+          padding-bottom: 4px;
+        }
+        .topbar .search-wrap {
+          min-width: 0;
+        }
+        .reading-block {
+          padding: 8px 0;
+        }
+        .branch {
+          display: none;
+        }
+      }
+      @media print {
+        html {
+          scroll-behavior: auto;
+        }
+        body {
+          --bg: #fffaf0;
+          --surface: #faf5e8;
+          --surface-2: #ebe6d6;
+          --line: #9a9a9a;
+          --line-strong: #6a6a6a;
+          --text: #0a0a0a;
+          --body: #1a1a1a;
+          --muted: #6a6a6a;
+          --primary: #0a0a0a;
+          background: var(--bg);
+          font-size: 0.75rem;
+        }
+        .topbar,
+        .sidebar,
+        .actions,
+        .learned-btn,
+        .pager,
+        .copy-btn,
+        .roadmap-shell,
+        .js-only,
+        .demo-controls,
+        .notes-actions,
+        .no-results {
+          display: none !important;
+        }
+        .layout {
+          display: block;
+          padding: 0;
+          max-width: none;
+        }
+        .chapter[hidden],
+        .topic-card[hidden],
+        .reading-block[hidden],
+        .op-card[hidden] {
+          display: block !important;
+        }
+        .grid[hidden] {
+          display: grid !important;
+        }
+        .hero {
+          padding-bottom: 16px;
+        }
+        .chapter {
+          padding-top: 24px;
+          margin-top: 24px;
+        }
+        .chapter-header {
+          break-after: avoid;
+        }
+        .topic-card,
+        .table-wrap,
+        .flow {
+          break-inside: avoid;
+        }
+        .grid.two,
+        .grid.three {
+          grid-template-columns: 1fr 1fr;
+        }
+        h1 {
+          font-size: 2rem;
+        }
+        h2 {
+          font-size: 1.5rem;
+        }
+        pre {
+          white-space: pre-wrap;
+        }
+        a {
+          color: var(--text);
+        }
+        .footer {
+          margin-top: 24px;
+        }
+        .table-wrap {
+          overflow: visible;
+        }
+        .table-wrap table {
+          min-width: 0;
+        }
+        .notes {
+          min-height: 80px;
+        }
+        details > p,
+        details > ul {
+          display: block;
+        }
+        .study-progress {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to the field guide</a>
+    <header class="topbar">
+      <div class="bar-inner">
+        <a class="brand" href="#main">Project field guide</a>
+        <div class="bar-tools">
+          <div class="search-wrap js-only">
+            <label class="sr-only" for="search"
+              >Search chapters and topic cards</label
+            ><input
+              id="search"
+              type="search"
+              placeholder="Search guide  /"
+              autocomplete="off"
+            />
+          </div>
+          <button
+            id="theme"
+            class="js-only"
+            type="button"
+            aria-label="Switch to light theme"
+          >
+            Light mode</button
+          ><button id="print" type="button" class="js-only print-button">
+            Print
+          </button>
+        </div>
+      </div>
+    </header>
+    <nav class="mobile-nav js-only" aria-label="Compact chapter navigation">
+      <div class="field">
+        <label for="chapter-jump">Jump to chapter</label>
+        <div class="jump-controls">
+          <select id="chapter-jump" aria-label="Jump to chapter"></select
+          ><button id="jump-go" type="button">Go</button>
+        </div>
+      </div>
+    </nav>
+    <div
+      id="action-status"
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+    ></div>
+    <div class="layout">
+      <aside class="sidebar" aria-label="Study navigation">
+        <p class="eyebrow">Your sixty-minute route</p>
+        <nav id="toc" aria-label="Chapters"></nav>
+        <div class="sidebar-foot">
+          <span id="progress-text" class="small">0 of 10 chapters learned</span
+          ><progress
+            id="progress"
+            class="study-progress"
+            value="0"
+            max="10"
+            aria-label="Study progress"
+          ></progress>
+          <p class="small">
+            Mark a chapter learned only when you can explain its checkpoint
+            without reading.
+          </p>
+          <p class="small"><a href="#questions">Keep a question list</a></p>
+        </div>
+      </aside>
+      <main id="main" class="main-content">
+        <div class="hero">
+          <p class="eyebrow">
+            DBMS course project / working plan / 12 November 2026
+          </p>
+          <h1>Your project, from idea<br />to live demo.</h1>
+          <p class="lead">
+            Understand the whole system before you spend days prompting,
+            debugging, and polishing slides. Follow this guide once, question
+            the decisions, then build one verified piece at a time.
+          </p>
+          <p class="small">
+            Database Management System for a Blogging Site for AI agents and
+            Humans
+          </p>
+          <div class="actions">
+            <a class="pill filled" href="#product">Start the 60-minute route</a
+            ><a class="pill" href="#build">Jump to the build workflow</a
+            ><a class="pill" href="#structure">Explore the file structure</a>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <strong>60 min</strong><span>To study and discuss the plan</span>
+            </div>
+            <div class="stat">
+              <strong>10</strong><span>Chapters, each with a checkpoint</span>
+            </div>
+            <div class="stat">
+              <strong>5</strong><span>Reusable database operations</span>
+            </div>
+            <div class="stat">
+              <strong>MySQL</strong><span>React TSX + Node + Tailwind</span>
+            </div>
+          </div>
+          <div class="callout">
+            <p>
+              <strong>This is the learning and build plan.</strong> The blogging
+              application does not exist yet. The hour is for understanding this
+              guide, not a promise to finish the project. Screens, folders,
+              endpoints, and tests below are proposed work.
+            </p>
+            <p class="small">
+              Course facts: match the submitted ER diagram or justify changes;
+              demonstrate five functions with reliable transactions; give a live
+              demo and a 10-minute product pitch plus Q&amp;A. The 25 October
+              2026 date was the mid-semester deadline. A final date has not been
+              provided.
+            </p>
+          </div>
+          <div class="orientation">
+            <div class="topic-card">
+              <p class="eyebrow">Your main work</p>
+              <h3>Decide, inspect, explain.</h3>
+              <p>
+                You provide bounded prompts, run the result, inspect the
+                evidence, ask questions, and keep only changes you understand.
+                Ask your friend to review a concrete decision or failing trace.
+              </p>
+            </div>
+            <div class="topic-card">
+              <p class="eyebrow">Codex's main work</p>
+              <h3>Implement a reviewable step.</h3>
+              <p>
+                Generate diagrams, code, tests, documentation, and slides in
+                stages. Every handoff should say what changed, how to run it,
+                what passed, and what remains uncertain.
+              </p>
+            </div>
+          </div>
+          <details class="roadmap-shell js-only js-block">
+            <summary>
+              Explore the learning map · 60 minutes in ten chapters
+            </summary>
+            <p class="small">
+              The spine is the study order. Side branches identify the artifact
+              or question you should carry forward.
+            </p>
+            <div id="roadmap" class="roadmap"></div>
+          </details>
+          <p
+            id="search-status"
+            class="status-line js-only"
+            role="status"
+            aria-live="polite"
+          ></p>
+          <div id="no-results" class="no-results" hidden>
+            <h3>No matching chapters</h3>
+            <p>Try “transaction”, “TSX”, “prompt”, or “presentation”.</p>
+            <button id="clear-search" type="button">Clear search</button>
+          </div>
+        </div>
+
+        <section
+          class="chapter"
+          id="product"
+          data-minutes="5"
+          data-branch="Scope and submitted ER"
+          data-side="left"
+        >
+          <header class="chapter-header">
+            <span class="numeral">01</span>
+            <div class="chapter-title">
+              <p class="eyebrow">00–05 minutes / purpose</p>
+              <h2>Know what you are building</h2>
+              <p class="lead">
+                A small blogging product with a database you can defend.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>The product in one story</h3>
+            <p>
+              A human signs in, registers an agent they own, and publishes a
+              post as that agent. Another human comments. The owner revises the
+              content without losing history. A moderator can hide an unsuitable
+              post and leave an audit trail. Human and agent authors are clearly
+              labeled throughout.
+            </p>
+            <p>
+              <strong>Why this is a DBMS project:</strong> authorship,
+              ownership, versions, discussions, and moderation span related
+              records. The interesting part is keeping those records correct
+              when an operation fails or two people act together.
+            </p>
+            <p class="small">
+              Next: explain this story aloud without naming any framework.
+            </p>
+          </div>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>Keep the first version small</h3>
+              <ul>
+                <li>Human login and a seeded moderator.</li>
+                <li>Feed and post detail, with human/agent badges.</li>
+                <li>Agent management and an author selector.</li>
+                <li>Post editor, revision history, comments, moderation.</li>
+                <li>A repeatable demo dataset and five verified methods.</li>
+              </ul>
+              <p class="small">
+                Next: decide which screen demonstrates each operation.
+              </p>
+            </div>
+            <div class="topic-card">
+              <h3>Leave optional work until the core works</h3>
+              <p>
+                Live LLM generation, automatic agent scheduling, image uploads,
+                followers, likes, recommendations, and realtime chat can wait.
+                Agent identity and agent-authored seeded content are enough for
+                the initial model.
+              </p>
+              <p>
+                Describe the prototype honestly: representing agent authors does
+                not demonstrate an autonomous agent unless you actually build
+                one.
+              </p>
+              <p class="small">
+                Next: put extra ideas in a later-work list, not the first build
+                prompt.
+              </p>
+            </div>
+          </div>
+          <div class="topic-card">
+            <h3>Resolve the existing design mismatch</h3>
+            <p>
+              The repository's Claude report and ER files describe inventory
+              management. Your confirmed title describes blogging. You said
+              those diagrams and another PPT are the previous work and may
+              change. Preserve the actual submitted version, identify what was
+              submitted, and write a technically sound comparison before
+              claiming final fidelity.
+            </p>
+            <p>
+              <strong>You do not need to wait to study or sketch.</strong>
+              Before freezing the database design, reconcile the submission with
+              this topic. There is no professor example ER diagram to obtain.
+            </p>
+            <p class="small">
+              Next: record baseline filenames and justified differences in
+              <a href="docs/design/change-log.md">the design-change log</a>.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>Checkpoint: what is the project actually proving?</summary>
+            <p>
+              A useful human/agent blogging workflow, a sound data model, five
+              reusable operations, and consistent data on both success and
+              failure. A polished page by itself cannot prove these.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: read
+            <a href="docs/requirements/course-project.md"
+              >the supplied course announcements</a
+            >
+            and identify what is mandatory versus proposed.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="stack"
+          data-minutes="6"
+          data-branch="MySQL and the application layers"
+          data-side="right"
+        >
+          <header class="chapter-header">
+            <span class="numeral">02</span>
+            <div class="chapter-title">
+              <p class="eyebrow">05–11 minutes / architecture</p>
+              <h2>Give every technology one job</h2>
+              <p class="lead">
+                Your stack is React TSX + Tailwind, Express/Node TypeScript, and
+                MySQL.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="topic-card">
+            <h3>The layers you will create</h3>
+            <div
+              class="flow"
+              aria-label="Request flows from React to the API, service, and database"
+            >
+              <div class="flow-node">
+                <strong>React + TSX</strong>Forms, feed, loading and error
+                states
+              </div>
+              <div class="flow-node">
+                <strong>Tailwind CSS</strong>Layout, spacing, responsive visual
+                system
+              </div>
+              <div class="flow-node">
+                <strong>Node + Express</strong>HTTP routes, authentication,
+                validation
+              </div>
+              <div class="flow-node">
+                <strong>TS services</strong>Permissions, business rules,
+                transactions
+              </div>
+              <div class="flow-node">
+                <strong>MySQL</strong>Tables, keys, SQL queries, transactions
+              </div>
+            </div>
+            <p>
+              Vite is the suggested frontend development/build tool. Use
+              mysql2/promise for readable parameterized SQL between TypeScript
+              services and MySQL. Choose compatible versions when scaffolding;
+              this guide is not a package lockfile.
+            </p>
+            <p class="small">
+              Next: point to where a failed database rule should become an API
+              error and then a visible form message.
+            </p>
+          </div>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>.tsx and .ts serve different files</h3>
+              <p>
+                <code>PostEditor.tsx</code> renders JSX with typed props/state.
+                <code>post.service.ts</code> contains server logic and no JSX.
+                TypeScript helps catch mismatched shapes before execution; it
+                does not validate incoming HTTP JSON or replace runtime database
+                checks.
+              </p>
+              <p>
+                Use Tailwind in the actual React product. This offline handbook
+                follows <code>design.md</code>: plain HTML, CSS, and JavaScript.
+              </p>
+              <p class="small">
+                Next: see
+                <a href="https://react.dev/learn/typescript"
+                  >React's TypeScript guide</a
+                >
+                and
+                <a href="https://tailwindcss.com/docs/installation/using-vite"
+                  >Tailwind's Vite integration</a
+                >.
+              </p>
+            </div>
+            <div class="topic-card">
+              <h3>Frontend state is temporary</h3>
+              <p>
+                React state holds the editor draft and request status. MySQL
+                holds committed posts and revisions. Refreshing the page should
+                reload persisted content through the API. The browser must never
+                connect directly to the database or receive its connection
+                secret.
+              </p>
+              <p>
+                A disabled button improves UX, but server authorization and
+                uniqueness rules must still reject invalid direct API calls.
+              </p>
+              <p class="small">
+                Next: describe what survives a browser refresh and what does
+                not.
+              </p>
+            </div>
+          </div>
+          <div class="topic-card">
+            <h3>MySQL is the chosen database</h3>
+            <p>
+              You chose SQL/MySQL because this is a DBMS course project and you
+              already know SQL. Keep React TSX, Tailwind, Node, and Express; use
+              MySQL with InnoDB tables for persistence. The stack is React +
+              Express + Node + MySQL.
+            </p>
+            <ol>
+              <li>
+                Translate the agreed ER model into tables with primary keys,
+                foreign keys, unique constraints, and justified indexes.
+              </li>
+              <li>
+                Write readable parameterized SQL through
+                <code>mysql2/promise</code>; use explicit SQL files for schema
+                and seed data. An ORM is not needed for the initial plan.
+              </li>
+              <li>
+                Run each logical transaction on one acquired connection: begin,
+                execute all related queries, commit or roll back, then release
+                the connection.
+              </li>
+            </ol>
+            <p class="small">
+              Next: check your installed version with
+              <code>SELECT VERSION();</code>. See
+              <a href="https://dev.mysql.com/doc/refman/8.4/en/commit.html"
+                >MySQL transaction statements</a
+              >
+              and the
+              <a href="https://sidorares.github.io/node-mysql2/docs"
+                >mysql2 driver</a
+              >.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>Checkpoint: where does a transaction belong?</summary>
+            <p>
+              In a reusable backend service method, spanning the related
+              database writes. A React component requests the operation; it does
+              not control MySQL's transaction.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: draw the layers on paper and trace one button click
+            through them.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="data"
+          data-minutes="8"
+          data-branch="ER and normalized schema"
+          data-side="left"
+        >
+          <header class="chapter-header">
+            <span class="numeral">03</span>
+            <div class="chapter-title">
+              <p class="eyebrow">11–19 minutes / data model</p>
+              <h2>Understand the records before the screens</h2>
+              <p class="lead">
+                Nine proposed domain relations, each with a clear
+                responsibility.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>A logical schema and a physical mapping</h3>
+            <p>
+              The logical ER model describes entities and relationships. The
+              normalized relational schema explains dependencies and keys. MySQL
+              CREATE TABLE statements implement that schema. Keep the ER
+              diagram, normalization rationale, SQL constraints, and service
+              behavior aligned.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <caption class="sr-only">
+                  Proposed MySQL domain tables and their integrity rules
+                </caption>
+                <thead>
+                  <tr>
+                    <th>MySQL table</th>
+                    <th>What it stores</th>
+                    <th>Key / rule to explain</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>ACCOUNT</td>
+                    <td>Common identity, type, display name</td>
+                    <td>One identity, exactly one human or agent subtype</td>
+                  </tr>
+                  <tr>
+                    <td>HUMAN_PROFILE</td>
+                    <td>Human email, member/moderator role</td>
+                    <td>
+                      One profile per human account; unique normalized email
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AGENT_PROFILE</td>
+                    <td>Agent details and human owner</td>
+                    <td>One profile per agent account; owner must be human</td>
+                  </tr>
+                  <tr>
+                    <td>POST</td>
+                    <td>Author reference, status, timestamps</td>
+                    <td>One author per post; content lives in revisions</td>
+                  </tr>
+                  <tr>
+                    <td>POST_REVISION</td>
+                    <td>Title, body, editor, version number</td>
+                    <td>Unique pair (postId, revisionNo)</td>
+                  </tr>
+                  <tr>
+                    <td>COMMENT</td>
+                    <td>Post, author, body, optional parent</td>
+                    <td>Parent comment must belong to the same post</td>
+                  </tr>
+                  <tr>
+                    <td>TAG</td>
+                    <td>Canonical tag name</td>
+                    <td>Unique normalized name</td>
+                  </tr>
+                  <tr>
+                    <td>POST_TAG</td>
+                    <td>Post–tag association</td>
+                    <td>Unique pair (postId, tagId)</td>
+                  </tr>
+                  <tr>
+                    <td>MODERATION_ACTION</td>
+                    <td>Actor, reason, before/after state</td>
+                    <td>
+                      Authorized human moderator; history accompanies status
+                      change
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small">
+              Use explicit primary/foreign keys and composite keys such as
+              (Post_ID, Revision_No) and (Post_ID, Tag_ID). Foreign keys enforce
+              referenced-row existence; they do not by themselves enforce
+              moderator permissions, matching account subtypes, or every
+              cross-row business rule. Services and transactions must enforce
+              those additional rules.
+            </p>
+          </div>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>Normalize by explaining a dependency</h3>
+              <p>
+                Suppose you repeat an author's email in every post. If the email
+                changes, many copies can disagree. Instead, store the author's
+                identity once and reference it from each post.
+              </p>
+              <p>
+                In <code>POST_REVISION</code>,
+                <code>(Post_ID, Revision_No)</code> identifies the title/body
+                for one version. In <code>POST_TAG</code>, the tag's name
+                belongs to TAG, not to every association.
+              </p>
+              <p>
+                <strong>For the report:</strong> enumerate candidate keys and
+                functional dependencies; justify 1NF, 2NF, and 3NF under your
+                chosen rules. The table sketch alone is not a normalization
+                proof.
+              </p>
+              <p class="small">
+                Next: explain one insertion, update, or deletion anomaly the
+                design avoids.
+              </p>
+            </div>
+            <div class="topic-card">
+              <h3>Know the cardinalities</h3>
+              <ul>
+                <li>
+                  One human may own many agents; each agent has one human owner.
+                </li>
+                <li>
+                  One account may author many posts; each post has one author.
+                </li>
+                <li>
+                  Each post has one or more revisions; each revision belongs to
+                  one post.
+                </li>
+                <li>Posts and tags form a many-to-many relationship.</li>
+                <li>
+                  A comment has zero or one parent and may have many replies.
+                </li>
+              </ul>
+              <p>
+                Total/disjoint account specialization needs a separate rule;
+                optional subtype lines alone cannot guarantee it.
+              </p>
+              <p class="small">
+                Next: use Crow's Foot optionality labels and compare them with
+                the submitted diagram.
+              </p>
+            </div>
+          </div>
+          <div class="topic-card">
+            <h3>Freeze a few policies before writing models</h3>
+            <p>
+              Proposed first-version rules: owners manage their agents; only the
+              author or owning human can revise an agent post; moderators can
+              hide/restore content; published posts accept comments; hidden
+              posts do not; posts are hidden rather than hard-deleted. Read
+              permissions for hidden posts must also be defined.
+            </p>
+            <p>
+              Decide whether revisions are append-only, whether tags change with
+              content, and how the API rejects stale edits. Keep roles
+              server-checked. Supporting authentication records may require
+              additional infrastructure tables; these nine domain tables are
+              proposals, not a final table count.
+            </p>
+            <p class="small">
+              Next: write these choices as business rules in
+              <code>docs/design/</code> before freezing the ER export.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: why store comments and revisions in separate tables?
+            </summary>
+            <p>
+              A post can have many comments and many revisions. Separate tables
+              give each row a clear identity and relationship, preserve history,
+              and support constraints and joins. Explain the functional
+              dependencies and normalization rationale instead of combining
+              repeated data into one large row.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: open
+            <a href="docs/design/proposed-model.md">the proposed model</a>, then
+            annotate every relationship with its integrity rule.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="request"
+          data-minutes="6"
+          data-branch="A request from click to commit"
+          data-side="right"
+        >
+          <header class="chapter-header">
+            <span class="numeral">04</span>
+            <div class="chapter-title">
+              <p class="eyebrow">19–25 minutes / runtime flow</p>
+              <h2>Trace one complete operation</h2>
+              <p class="lead">Use “publish a post” as your reference path.</p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>What happens after Publish?</h3>
+            <ol class="step-list">
+              <li>
+                <strong>PostEditor.tsx collects the draft.</strong> Title, body,
+                selected tags, and a permitted author selection. The UI shows
+                pending state and prevents accidental duplicate clicks.
+              </li>
+              <li>
+                <strong>The API client sends POST /api/posts.</strong> It sends
+                JSON plus the established authentication mechanism. Input types
+                help developers; runtime validation checks the actual payload.
+              </li>
+              <li>
+                <strong>Express authenticates and validates.</strong> A verified
+                session determines the human identity. If posting as an agent,
+                the server checks that this human owns it. Never trust a
+                client-supplied actor ID on its own.
+              </li>
+              <li>
+                <strong>publishPost runs the logical task.</strong> Create the
+                post, first revision, tags if needed, and associations in one
+                database transaction. Use the same acquired MySQL connection for
+                every query in this transaction.
+              </li>
+              <li>
+                <strong>Commit, then return success.</strong> The client
+                receives the new post ID, navigates to its detail view, and
+                refreshes relevant data. On failure it keeps the draft and shows
+                a useful error.
+              </li>
+            </ol>
+            <p class="small">
+              Next: recreate this trace in browser Network tools once the API
+              exists.
+            </p>
+          </div>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>The response contract</h3>
+              <pre><code>// Illustrative API shapes, not existing code.
+201: { data: { postId: "...", revisionNo: 1 } }
+400: { error: { code: "INVALID_INPUT", message: "..." } }
+403: { error: { code: "NOT_ALLOWED", message: "..." } }
+409: { error: { code: "CONFLICT", message: "..." } }
+500: { error: { code: "INTERNAL", requestId: "..." } }</code></pre>
+              <p>
+                Keep raw internal errors in safe server diagnostics. Present a
+                useful user message and request ID. A network timeout after
+                commit can leave the client unsure; define a retry/read-back
+                policy instead of blindly repeating writes.
+              </p>
+              <p class="small">
+                Next: write shared request/response types, then validate server
+                input independently.
+              </p>
+            </div>
+            <div class="topic-card">
+              <h3>The important boundary</h3>
+              <p>
+                The service method is reusable from an HTTP route, integration
+                test, or demo script. It should not depend on React or send an
+                Express response itself.
+              </p>
+              <p>
+                A controller translates HTTP into service input/output. SQL
+                schema files describe tables/constraints; a repository module
+                contains parameterized queries. A service owns permissions,
+                state rules, and transaction boundaries. This separation lets
+                you explain and test each responsibility.
+              </p>
+              <p class="small">
+                Next: locate those responsibilities in the folder map in chapter
+                6.
+              </p>
+            </div>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: the UI says “failed”, but the database contains a
+              post. Is that impossible?
+            </summary>
+            <p>
+              No. A response can be lost after a successful commit. Check the
+              request ID and server/database evidence. Atomicity prevents a
+              partially committed logical operation; it does not guarantee the
+              client receives the response. Retry behavior is a separate design
+              issue.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: ask Codex to diagram both the successful path and a
+            failed write after the first database insert.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="functions"
+          data-minutes="8"
+          data-branch="Five methods and rollback"
+          data-side="left"
+        >
+          <header class="chapter-header">
+            <span class="numeral">05</span>
+            <div class="chapter-title">
+              <p class="eyebrow">25–33 minutes / database behavior</p>
+              <h2>Make the five functions the backbone</h2>
+              <p class="lead">
+                Each function gets a UI entry, a service method, and evidence.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="topic-card">
+            <h3>The five proposed demo operations</h3>
+            <p>
+              The course requires five reusable methods; these specific choices
+              are suggestions. Login and read APIs are supporting work. You
+              should be able to invoke the core methods through the UI and
+              directly in tests.
+            </p>
+            <div class="field js-only js-block" style="margin-top: 16px">
+              <label for="operation">Explore an operation</label
+              ><select id="operation">
+                <option value="register">1 / Register an agent</option>
+                <option value="publish">2 / Publish a post</option>
+                <option value="revise">3 / Revise a post</option>
+                <option value="comment">4 / Add a comment</option>
+                <option value="moderate">5 / Moderate a post</option>
+              </select>
+            </div>
+            <div class="op-card" data-operation="register">
+              <h4>01 / registerAgent</h4>
+              <p>
+                <strong>Entry:</strong> Agent management → Register.
+                <strong>Route:</strong> <code>POST /api/agents</code>.
+                <strong>Writes:</strong> ACCOUNT + AGENT_PROFILE.
+              </p>
+              <ul>
+                <li>
+                  Check the authenticated owner is human; validate the agent
+                  details.
+                </li>
+                <li>
+                  Create the shared identity and its matching agent profile in
+                  one transaction.
+                </li>
+                <li>
+                  Try a late profile failure. Show that the account insert also
+                  rolled back.
+                </li>
+              </ul>
+              <span class="file-label"
+                >Suggested service: server/src/services/agent.service.ts</span
+              >
+            </div>
+            <div class="op-card" data-operation="publish">
+              <h4>02 / publishPost</h4>
+              <p>
+                <strong>Entry:</strong> Post editor → Publish.
+                <strong>Route:</strong> <code>POST /api/posts</code>.
+                <strong>Writes:</strong> POST + POST_REVISION + POST_TAG,
+                possibly TAG.
+              </p>
+              <ul>
+                <li>
+                  Validate author permissions and required content; create
+                  version 1 and tag links.
+                </li>
+                <li>
+                  Resolve canonical tag names; enforce unique names and
+                  association pairs with indexes.
+                </li>
+                <li>
+                  Force a failure after creating the revision; verify no partial
+                  post or new tag links remain.
+                </li>
+              </ul>
+              <span class="file-label"
+                >Suggested service: server/src/services/post.service.ts</span
+              >
+            </div>
+            <div class="op-card" data-operation="revise">
+              <h4>03 / revisePost</h4>
+              <p>
+                <strong>Entry:</strong> Post detail → Edit.
+                <strong>Route:</strong>
+                <code>POST /api/posts/:id/revisions</code>.
+                <strong>Writes:</strong> POST_REVISION + POST_TAG + POST
+                timestamp/version coordination.
+              </p>
+              <ul>
+                <li>
+                  Check edit permission and an expected revision number;
+                  preserve old content.
+                </li>
+                <li>
+                  Append the next revision and update associations atomically.
+                </li>
+                <li>
+                  Submit two edits based on version 1. One becomes version 2;
+                  the other returns a conflict and does not overwrite it.
+                </li>
+              </ul>
+              <span class="file-label"
+                >Suggested service: server/src/services/post.service.ts</span
+              >
+            </div>
+            <div class="op-card" data-operation="comment">
+              <h4>04 / addComment</h4>
+              <p>
+                <strong>Entry:</strong> Post detail → Comment/Reply.
+                <strong>Route:</strong>
+                <code>POST /api/posts/:id/comments</code>.
+                <strong>Write:</strong> comments, with coordinated post-state
+                checks.
+              </p>
+              <ul>
+                <li>
+                  Validate author and published/commentable state; verify any
+                  parent belongs to this post.
+                </li>
+                <li>
+                  A single insert is atomic, but a separate state read can race
+                  with moderation. Design a shared conditional-write/locking
+                  strategy rather than assuming a transaction makes every read
+                  safe.
+                </li>
+                <li>
+                  Reject a cross-post parent; test a comment racing with a hide
+                  operation.
+                </li>
+              </ul>
+              <span class="file-label"
+                >Suggested service: server/src/services/comment.service.ts</span
+              >
+            </div>
+            <div class="op-card" data-operation="moderate">
+              <h4>05 / moderatePost</h4>
+              <p>
+                <strong>Entry:</strong> Moderation queue → Hide/Restore.
+                <strong>Route:</strong>
+                <code>POST /api/posts/:id/moderation</code>.
+                <strong>Writes:</strong> POST status + MODERATION_ACTION.
+              </p>
+              <ul>
+                <li>
+                  Check moderator role, expected state, allowed transition, and
+                  reason.
+                </li>
+                <li>
+                  Change the status and save a before/after audit event in one
+                  transaction.
+                </li>
+                <li>
+                  Fail audit insertion after the status update. Verify that both
+                  status and history remain unchanged.
+                </li>
+              </ul>
+              <span class="file-label"
+                >Suggested service:
+                server/src/services/moderation.service.ts</span
+              >
+            </div>
+            <p class="small">
+              Next: choose a fixture, expected result, and negative case for
+              each method before implementing it.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>Understand commit and rollback by trying them</h3>
+            <p>
+              Imagine the database already has 2 posts, 2 revisions, and 3 tag
+              links. Publish would add one post, one revision, and two links. A
+              failure at the final step should expose none of those new records.
+            </p>
+            <div class="demo-panel">
+              <p class="eyebrow">
+                Browser-only teaching model / not a live database test
+              </p>
+              <div class="demo-controls js-only">
+                <div class="field">
+                  <label for="tx-outcome">Outcome to simulate</label
+                  ><select id="tx-outcome">
+                    <option value="success">All writes succeed</option>
+                    <option value="fail">
+                      Tag link fails after earlier writes
+                    </option>
+                  </select>
+                </div>
+                <button id="run-tx" type="button" class="filled">
+                  Run publish simulation</button
+                ><button id="reset-tx" type="button">Reset example</button>
+              </div>
+              <div class="demo-counts" aria-label="Committed record counts">
+                <div>
+                  <strong id="count-posts">2</strong
+                  ><span>Committed posts</span>
+                </div>
+                <div>
+                  <strong id="count-revisions">2</strong
+                  ><span>Committed revisions</span>
+                </div>
+                <div>
+                  <strong id="count-links">3</strong
+                  ><span>Committed tag links</span>
+                </div>
+              </div>
+              <div
+                id="tx-result"
+                class="demo-result"
+                role="status"
+                aria-live="polite"
+              >
+                <strong>Starting committed state</strong>
+                <p>
+                  Successful execution should show 3 / 3 / 5. A rolled-back
+                  execution should show 2 / 2 / 3. Each run starts from the same
+                  example fixture.
+                </p>
+              </div>
+            </div>
+            <p class="small">
+              In the real project, prove this with a database integration test
+              and a controlled failure hook enabled only in test/demo tooling.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>What the transaction implementation will resemble</h3>
+            <pre><code>// Illustrative mysql2 outline; helpers use parameterized SQL.
+const conn = await pool.getConnection();
+try {
+  await conn.beginTransaction();
+  await createPostRevisionAndTags(input, conn);
+  await conn.commit();
+} catch (error) { await conn.rollback(); throw error; }
+finally { conn.release(); }</code></pre>
+            <p>
+              Every participating query must use <code>conn</code>, not an
+              independent pool query. Use InnoDB tables. Define a post-row
+              locking or version-check strategy for concurrent edits and
+              comments racing with moderation. Keep schema changes outside
+              business transactions, and do not disable foreign-key checks to
+              make a failing operation pass.
+            </p>
+            <p class="small">
+              Next: read
+              <a href="https://dev.mysql.com/doc/refman/8.4/en/commit.html"
+                >COMMIT and ROLLBACK</a
+              >,
+              <a
+                href="https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html"
+                >InnoDB locking reads</a
+              >, and
+              <a href="https://sidorares.github.io/node-mysql2/docs"
+                >mysql2 connection usage</a
+              >.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: is three successful queries out of four “mostly
+              working”?
+            </summary>
+            <p>
+              For an interdependent logical operation, partial persistence is a
+              correctness failure. The operation must commit the intended
+              consistent state or roll back. Capture the error, verify persisted
+              state, and show that a subsequent valid call still works.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: run both simulation outcomes, then explain why a real
+            integration test is still necessary.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="structure"
+          data-minutes="6"
+          data-branch="Files and screen ownership"
+          data-side="right"
+        >
+          <header class="chapter-header">
+            <span class="numeral">06</span>
+            <div class="chapter-title">
+              <p class="eyebrow">33–39 minutes / repository map</p>
+              <h2>Know where each piece will live</h2>
+              <p class="lead">
+                One repository. Clear boundaries. Add folders when their work
+                begins.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>The proposed full-stack layout</h3>
+            <p>
+              Only the documentation/reference artifacts exist now. This tree
+              describes what we will create later; it is not an inventory of
+              implemented code.
+            </p>
+            <pre
+              class="tree"
+            ><code>client/                         React application
+  src/
+    pages/                      Feed.tsx, PostDetail.tsx, PostEditor.tsx
+                                Agents.tsx, Moderation.tsx, Login.tsx
+    components/                 AuthorBadge.tsx, TagPicker.tsx, ErrorNotice.tsx
+    api/                        client.ts, posts.ts, agents.ts
+    hooks/                      usePosts.ts, useSession.ts
+    styles/                     app.css (Tailwind entry + shared tokens)
+server/                         Node + Express, TypeScript
+  src/
+    app.ts                      Express composition; importable by tests
+    index.ts                    Listen and database connection startup
+    routes/                     URL → controller mapping
+    controllers/                HTTP input/output translation
+    services/                   The five reusable methods and business rules
+    repositories/               Parameterized SQL; receive the transaction connection
+    middleware/                 Auth, runtime validation, error handling
+    db/                         mysql2 pool and transaction helpers
+    scripts/                    Seed/reset of a dedicated demo database
+    tests/integration/          Real DB success, rollback, conflict tests
+database/                       schema.sql, seed.sql, ordered migrations
+shared/                         API DTO types, safe enums; no server secrets
+tests/e2e/                      A few real UI workflows
+docs/design/                    ER mapping, normalized schema, decisions
+docs/evidence/                  Test summaries, screenshots, trace references
+docs/presentation/              Outline, speaker notes, Q&amp;A, final deck
+diagrams/                       New blogging diagram source + exports
+.env.example                    Names/placeholders only; real values ignored
+README.md                       Actual install/run/test/demo commands</code></pre>
+            <p class="small">
+              Next: trace an agent creation from <code>Agents.tsx</code> to
+              <code>agent.service.ts</code>, then to ACCOUNT and AGENT_PROFILE.
+              Keep one root command scheme/workspace setup once scaffolding is
+              chosen.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>Connect screens to the database work</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Screen</th>
+                    <th>You will create</th>
+                    <th>What you verify</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Feed</td>
+                    <td>List cards, author badges, tags, pagination</td>
+                    <td>
+                      Only permitted published content appears; human/agent
+                      identity is accurate
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Post detail</td>
+                    <td>Current content, history, comment tree</td>
+                    <td>
+                      Refresh persists data; parent/reply and author links are
+                      correct
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Post editor</td>
+                    <td>
+                      Draft fields, author selection, tag picker, conflict/error
+                      states
+                    </td>
+                    <td>
+                      Publish is atomic; failed submissions preserve the draft;
+                      stale edits conflict
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Agents</td>
+                    <td>Owned agent list and registration form</td>
+                    <td>
+                      No orphan account/profile and no managing someone else's
+                      agent
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Moderation</td>
+                    <td>
+                      Queue, reason form, hide/restore actions, event history
+                    </td>
+                    <td>
+                      Role enforcement, correct transitions, status/history
+                      rollback
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Login</td>
+                    <td>Authentication and session UI</td>
+                    <td>
+                      Backend derives identity; unauthorized direct API requests
+                      are rejected
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small">
+              Next: write a one-page screen checklist, including loading, empty,
+              error, and success states.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: should you put database code in PostEditor.tsx?
+            </summary>
+            <p>
+              No. The browser sends an API request. Server services enforce
+              rules and SQL repositories persist the result. Shared types
+              describe safe contracts; they must not bundle database credentials
+              or server-only code into the client.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: ask a friend to pick a file at random from this tree and
+            explain its responsibility to them.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="build"
+          data-minutes="8"
+          data-branch="Prompts, gates, and commits"
+          data-side="left"
+        >
+          <header class="chapter-header">
+            <span class="numeral">07</span>
+            <div class="chapter-title">
+              <p class="eyebrow">39–47 minutes / implementation workflow</p>
+              <h2>Build in small, provable passes</h2>
+              <p class="lead">
+                A prompt starts the work. Evidence closes the stage.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>Your working loop</h3>
+            <div class="flow">
+              <div class="flow-node">
+                <strong>1 / Scope</strong>Choose one behavior and its acceptance
+                criteria
+              </div>
+              <div class="flow-node">
+                <strong>2 / Prompt</strong>Point Codex to sources and
+                constraints
+              </div>
+              <div class="flow-node">
+                <strong>3 / Inspect</strong>Read the diff and explanation
+              </div>
+              <div class="flow-node">
+                <strong>4 / Verify</strong>Run it, provoke failure, check
+                database state
+              </div>
+              <div class="flow-node">
+                <strong>5 / Capture</strong>Record decision/evidence, commit a
+                working step
+              </div>
+            </div>
+            <p>
+              Expect prompting, running commands, reading errors, and reviewing
+              evidence to take real effort. Keep a short question list. If you
+              cannot explain a change, ask for a trace or smaller example before
+              piling on features.
+            </p>
+            <p class="small">
+              Next: use the stage gates below as the basis for separate prompts,
+              not one giant “build everything” request.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>The build stages and their exit gates</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stage</th>
+                    <th>Codex creates</th>
+                    <th>Your verification / gate</th>
+                    <th>Save for evaluation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>A / Reconcile and model</td>
+                    <td>
+                      Submitted-baseline record, blogging ER, dependencies,
+                      normalized schema, SQL table definitions
+                    </td>
+                    <td>
+                      Explain every relation/cardinality; map to MySQL
+                      constraints; justify design changes
+                    </td>
+                    <td>
+                      Baseline, ER export, change log, normalization rationale
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>B / Scaffold and connect</td>
+                    <td>
+                      React TSX + Tailwind client, Express TS server, mysql2
+                      pool, MySQL/InnoDB setup
+                    </td>
+                    <td>
+                      Client loads; API health responds; DB smoke transaction
+                      actually commits and rolls back
+                    </td>
+                    <td>Working README and setup evidence</td>
+                  </tr>
+                  <tr>
+                    <td>C / Identity and agents</td>
+                    <td>
+                      Human auth, ownership rules, agent models and
+                      registerAgent
+                    </td>
+                    <td>
+                      Valid registration, denied owner, late failure rollback;
+                      no secrets in client
+                    </td>
+                    <td>First method's tests and account/profile trace</td>
+                  </tr>
+                  <tr>
+                    <td>D / Publish vertically</td>
+                    <td>publishPost, read APIs, editor/feed/detail screens</td>
+                    <td>
+                      Create via UI, refresh, inspect records, fail after an
+                      early write
+                    </td>
+                    <td>One end-to-end working product slice</td>
+                  </tr>
+                  <tr>
+                    <td>E / Complete the five</td>
+                    <td>
+                      Revision/history, comment/reply, moderation methods and
+                      screens
+                    </td>
+                    <td>
+                      Each method passes success, negative, repeat-call and
+                      relevant conflict checks
+                    </td>
+                    <td>Five-method traceability matrix</td>
+                  </tr>
+                  <tr>
+                    <td>F / Stabilize the demo</td>
+                    <td>
+                      Integration/E2E checks, seed/reset, error states,
+                      reproducible demo flow
+                    </td>
+                    <td>
+                      Fresh setup works; two full rehearsals use the same
+                      fixture; fix actual failures
+                    </td>
+                    <td>Test summary, screenshots, rollback evidence</td>
+                  </tr>
+                  <tr>
+                    <td>G / Pitch and defend</td>
+                    <td>
+                      Deck, speaker notes, ten-minute script, viva questions
+                    </td>
+                    <td>
+                      Every slide matches implemented behavior; every member
+                      explains the full flow
+                    </td>
+                    <td>Final deck and rehearsed live demo</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              These are dependency stages, not hour estimates. Avoid spending
+              the first implementation session on a large UI polish pass while
+              transactions remain unproven.
+            </p>
+            <p class="small">
+              Next: start with stage A; choose one stage-C/D operation to
+              implement all the way through before multiplying endpoints.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>A prompt you can reuse for each slice</h3>
+            <div class="prompt-block">
+              <pre
+                id="prompt-slice"
+              ><code>Read AGENTS.md, the handoff, course requirements, and current design.
+Implement only [one named operation] in the MySQL + React/Express/Node TypeScript stack.
+Keep the submitted ER mapping and documented ownership rules consistent.
+Use one acquired MySQL connection for every query in the transaction.
+Provide meaningful success, late-failure rollback, and repeat-call checks for me to run.
+Provide exact run commands, expected results, changed files, and remaining gaps.
+Do not control my browser or laptop; explain manual verification steps.
+Update the handoff and explain the request-to-database flow for my viva.</code></pre>
+              <button
+                type="button"
+                class="copy-btn js-only"
+                data-copy="prompt-slice"
+              >
+                Copy slice prompt
+              </button>
+            </div>
+            <p>
+              Replace the bracketed phrase with <code>registerAgent</code> or
+              another bounded task. Add acceptance examples and specify the
+              stage. Do not ask for “all tests passing” without inspecting what
+              those tests actually assert.
+            </p>
+            <p class="small">
+              Next: demand a before/after database-state explanation, not only a
+              screenshot.
+            </p>
+          </div>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>Close a session with a useful handoff</h3>
+              <p>
+                Ask for: the working behavior, files changed, commands run,
+                checks passed/failed, unresolved decisions, and the single next
+                useful task. Put this in <code>docs/context/handoff.md</code>.
+              </p>
+              <p>
+                When a step works, review <code>git diff</code>, keep secrets
+                and local data out, then commit a coherent unit. Commit/push
+                only when requested or clearly authorized.
+              </p>
+              <p class="small">
+                Next: keep enough notes that you can resume without rereading a
+                long chat.
+              </p>
+            </div>
+            <div class="topic-card">
+              <h3>Use your friend as a reviewer</h3>
+              <p>
+                Bring a narrow question: “Does this transaction prevent an
+                orphan account?” or “Can this stale edit overwrite revision 2?”
+                Include the diagram, service method, test, and observed output.
+              </p>
+              <p>
+                Ask them to challenge one assumption, explain one trade-off, and
+                suggest the smallest correction. Record the decision so the next
+                Codex prompt uses it.
+              </p>
+              <p class="small">
+                Next: turn feedback into an acceptance criterion and a
+                reproducible check.
+              </p>
+            </div>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: when is a generated feature ready to build on?
+            </summary>
+            <p>
+              When its acceptance behavior is demonstrated, meaningful failure
+              paths preserve consistency, the changed design is documented, you
+              can explain it, and the repository can reproduce it. Generated
+              files alone do not satisfy the gate.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: choose stage A's smallest deliverable and write its
+            acceptance criteria before the next coding prompt.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="debugging"
+          data-minutes="5"
+          data-branch="Reproduce and inspect evidence"
+          data-side="right"
+        >
+          <header class="chapter-header">
+            <span class="numeral">08</span>
+            <div class="chapter-title">
+              <p class="eyebrow">47–52 minutes / debugging</p>
+              <h2>Investigate one failing path at a time</h2>
+              <p class="lead">
+                Keep the exact evidence instead of repeating “it does not work”.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>Your debugging ladder</h3>
+            <ol class="step-list">
+              <li>
+                <strong>Reproduce on known data.</strong> Record account/role,
+                post ID, exact clicks or API body, expected state, actual state,
+                and request ID. Remove credentials before sharing.
+              </li>
+              <li>
+                <strong>Find the boundary that failed.</strong> Did the browser
+                send the request? Check Network status/body. Did the route run?
+                Read server logs. Were any records committed? Inspect the
+                dedicated test/demo database.
+              </li>
+              <li>
+                <strong>Reduce the scenario.</strong> Repeat the same
+                service/API call without UI styling. If the API is wrong,
+                changing React components will not fix it.
+              </li>
+              <li>
+                <strong>Fix the cause and prove recovery.</strong> Use a narrow
+                patch plus a meaningful regression check; rerun related behavior
+                and a valid subsequent call. Save the explanation.
+              </li>
+            </ol>
+            <p class="small">
+              Next: organize evidence by operation, not by a pile of unrelated
+              screenshots.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>Read the symptom as a clue</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symptom</th>
+                    <th>First inspection</th>
+                    <th>Evidence of a real fix</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Writes do not roll back</td>
+                    <td>
+                      InnoDB engine, explicit transaction, same connection,
+                      accidental autocommit/DDL
+                    </td>
+                    <td>
+                      A real multi-table commit and rollback test both pass
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Account exists, profile missing</td>
+                    <td>
+                      A pooled query outside the acquired connection, swallowed
+                      error, missing rollback
+                    </td>
+                    <td>Forced late failure leaves neither new record</td>
+                  </tr>
+                  <tr>
+                    <td>Two edits overwrite each other</td>
+                    <td>
+                      Expected revision, unique composite key, conditional write
+                      strategy
+                    </td>
+                    <td>
+                      Concurrent test commits one version and reports a conflict
+                      for the other
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>403 on valid action</td>
+                    <td>
+                      Session identity, owner/role rule, selected agent
+                      authorization
+                    </td>
+                    <td>Correct owner succeeds; another user still fails</td>
+                  </tr>
+                  <tr>
+                    <td>UI shows stale or vanished data</td>
+                    <td>
+                      Actual committed result, request error handling,
+                      refresh/refetch path
+                    </td>
+                    <td>
+                      Reload shows persisted content; failed forms keep the
+                      draft
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small">
+              Do not “fix” duplicate-key failures by removing the unique index.
+              Understand which duplicate violated the intended rule and handle
+              it deliberately.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>A useful debugging prompt</h3>
+            <pre
+              id="prompt-debug"
+            ><code>Operation and fixture: [method, actor, record IDs, setup steps].
+Expected: [API response and committed DB state].
+Actual: [status, safe error excerpt, observed records].
+Reproduce this exact case and identify the failing layer.
+Make the smallest justified fix; preserve transaction and authorization rules.
+Add/run a regression check, report evidence, and update the handoff.</code></pre>
+            <button
+              type="button"
+              class="copy-btn js-only"
+              data-copy="prompt-debug"
+            >
+              Copy debugging prompt
+            </button>
+            <p class="small">
+              Next: use a dedicated fixture and avoid pasting .env values or
+              session tokens.
+            </p>
+          </div>
+          <div class="topic-card" id="manual-testing">
+            <h3>Testing is yours to run</h3>
+            <p>
+              I will provide steps and expected outputs; agents should not
+              control your laptop/browser. For this guide, do these quick checks
+              yourself:
+            </p>
+            <ol>
+              <li>
+                Refresh the file, switch both themes, and check readable text
+                and clear controls.
+              </li>
+              <li>
+                Narrow the window, choose a chapter in Jump to chapter, and
+                press Go.
+              </li>
+              <li>
+                Search for MySQL, then nonsense; clear the search and confirm
+                all chapters return.
+              </li>
+              <li>
+                Mark one chapter learned, write a test question, refresh, and
+                check persistence if browser storage is available.
+              </li>
+              <li>
+                Run the teaching simulation: success gives 3 / 3 / 5; failure
+                gives 2 / 2 / 3. This is not a database test.
+              </li>
+            </ol>
+            <p>
+              For SQL practice now and real schema/API checks later, follow
+              <a href="docs/testing/manual-checklist.md"
+                >the manual testing checklist</a
+              >. The application and its npm scripts are not built yet, so do
+              not expect application test commands to work today.
+            </p>
+            <p class="small">
+              Next: send a failed step, expected output, actual output, and a
+              safe error excerpt. You keep control of the screen.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: the happy path passes. What failure should you ask for
+              next?
+            </summary>
+            <p>
+              For publish or registration, force a failure after at least one
+              earlier write and inspect the database. For revision, race two
+              stale edits. For comments, try a parent from another post and a
+              moderation race. Choose evidence tied to the actual rule.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: create a five-row evidence matrix: operation, success
+            case, failure case, expected state, observed result.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="presentation"
+          data-minutes="5"
+          data-branch="Product pitch and live demo"
+          data-side="left"
+        >
+          <header class="chapter-header">
+            <span class="numeral">09</span>
+            <div class="chapter-title">
+              <p class="eyebrow">52–57 minutes / evaluation</p>
+              <h2>Collect the presentation while building</h2>
+              <p class="lead">
+                Your pitch should tell the story of a working database product.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="topic-card">
+            <h3>A ten-minute run of show</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>What to show</th>
+                    <th>What to say</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>0:00–1:00</td>
+                    <td>Problem slide + one user story</td>
+                    <td>
+                      Human and agent content needs clear identity, traceable
+                      changes, and accountable discussion
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>1:00–2:00</td>
+                    <td>Product screens and architecture</td>
+                    <td>
+                      React handles interaction; services enforce rules; MySQL
+                      persists consistent rows
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>2:00–4:00</td>
+                    <td>Readable ER, keys, one normalization example</td>
+                    <td>
+                      Why entities are separate; mapping to SQL tables;
+                      justified deviations from submission
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>4:00–9:00</td>
+                    <td>All five operations using a rehearsed fixture</td>
+                    <td>
+                      Register agent, publish, revise, comment, moderate;
+                      demonstrate at least one rollback with before/after
+                      evidence
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>9:00–10:00</td>
+                    <td>Reliability evidence, value, honest next steps</td>
+                    <td>
+                      What works, why the database design fits, what additional
+                      investment would enable
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Q&amp;A follows the ten minutes. Pre-fill forms and use concise
+              seed content to fit the five-minute demo segment; rehearse and
+              adjust to observed timing. Backup screenshots/video can help
+              explain a failure, but the announced evaluation requires a live
+              demonstration.
+            </p>
+            <p class="small">
+              Next: record each operation's demo input and expected output as
+              soon as it works.
+            </p>
+          </div>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>Save four kinds of evidence</h3>
+              <ul>
+                <li>
+                  <strong>Design:</strong> final ER export, normalized schema,
+                  SQL schema, change justification.
+                </li>
+                <li>
+                  <strong>Behavior:</strong> five methods, UI entry points, API
+                  contracts.
+                </li>
+                <li>
+                  <strong>Reliability:</strong> test summary, rollback state,
+                  revision-conflict example.
+                </li>
+                <li>
+                  <strong>Reproduction:</strong> setup guide, demo seed/reset,
+                  run of show.
+                </li>
+              </ul>
+              <p>
+                Use real screenshots and results. Label plans as plans; do not
+                pitch live autonomous generation if the prototype only models
+                agent authors.
+              </p>
+              <p class="small">
+                Next: store notes in <code>docs/presentation/</code> and
+                evidence in <code>docs/evidence/</code> when created.
+              </p>
+            </div>
+            <div class="topic-card">
+              <h3>Ask every member these questions</h3>
+              <ul>
+                <li>Why share an ACCOUNT identity across humans and agents?</li>
+                <li>What prevents an orphan profile or duplicate revision?</li>
+                <li>Why does publish need a transaction?</li>
+                <li>What happens when two edits arrive together?</li>
+                <li>
+                  Which integrity rules are enforced in the database versus
+                  services?
+                </li>
+                <li>What changed from the submitted diagram, and why?</li>
+              </ul>
+              <p class="small">
+                Next: trade questions with your friend; answer using one
+                concrete record trace.
+              </p>
+            </div>
+          </div>
+          <div class="topic-card">
+            <h3>A prompt for the deck, once the evidence exists</h3>
+            <pre
+              id="prompt-deck"
+            ><code>Use the implemented design, current handoff, and verified demo evidence.
+Create a ten-minute product-pitch outline with speaker notes and live-demo cues.
+Cover problem, solution, ER/normalization, five functions, rollback, and value.
+Separate implemented features from future work; invent no metrics or results.
+Add Q&amp;A answers tied to our actual schema, methods, and design-change log.
+List any missing screenshots or proof before claiming the deck is final.</code></pre>
+            <button
+              type="button"
+              class="copy-btn js-only"
+              data-copy="prompt-deck"
+            >
+              Copy presentation prompt
+            </button>
+            <p class="small">
+              Next: create the PPT only after its claims can be traced to real
+              artifacts, then rehearse the complete flow.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>
+              Checkpoint: what does a good “Shark Tank” pitch prove here?
+            </summary>
+            <p>
+              A real problem, a useful product response, an appropriate database
+              model, reliable operations, and a team that can explain the
+              evidence. It can be engaging without invented users, revenue,
+              benchmarks, or unsupported claims.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: tell the product story in 30 seconds, then defend one
+            transaction in 60 seconds.
+          </p>
+        </section>
+
+        <section
+          class="chapter"
+          id="questions"
+          data-minutes="3"
+          data-branch="Explain it without reading"
+          data-side="right"
+        >
+          <header class="chapter-header">
+            <span class="numeral">10</span>
+            <div class="chapter-title">
+              <p class="eyebrow">57–60 minutes / readiness</p>
+              <h2>Leave with a plan you can explain</h2>
+              <p class="lead">
+                Three minutes to expose the remaining questions.
+              </p>
+            </div>
+            <button
+              class="learned-btn js-only"
+              type="button"
+              aria-pressed="false"
+            >
+              Mark learned
+            </button>
+          </header>
+          <div class="reading-block">
+            <h3>Your one-minute explanation</h3>
+            <p>
+              “We are building a blogging site for human and agent authors.
+              React TSX and Tailwind provide the screens. Express and TypeScript
+              services enforce ownership and workflow rules. MySQL stores
+              normalized tables with keys and constraints matching our ER model.
+              Five reusable methods demonstrate registration, publishing,
+              revision, commenting, and moderation. Interdependent writes use
+              transactions, with evidence that late failures roll back. We
+              document changes from the submitted ER and demonstrate the result
+              live.”
+            </p>
+            <p>
+              Use this after reconciling the submitted baseline and implementing
+              the described behavior. During development, say “planned” for
+              anything not implemented.
+            </p>
+            <p class="small">
+              Next: repeat this without looking, then trace publish through five
+              layers.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>Can you explain these without reading?</h3>
+            <ul class="checklist">
+              <li>
+                <label
+                  ><input type="checkbox" data-check="purpose" /><span
+                    >The problem and the smallest useful product story.</span
+                  ></label
+                >
+              </li>
+              <li>
+                <label
+                  ><input type="checkbox" data-check="stack" /><span
+                    >What React, Tailwind, Express, services, and MySQL each
+                    do.</span
+                  ></label
+                >
+              </li>
+              <li>
+                <label
+                  ><input type="checkbox" data-check="data" /><span
+                    >The nine domain relations, important keys, and one
+                    normalization example.</span
+                  ></label
+                >
+              </li>
+              <li>
+                <label
+                  ><input type="checkbox" data-check="transaction" /><span
+                    >The five methods and exactly what rolls back on a late
+                    failure.</span
+                  ></label
+                >
+              </li>
+              <li>
+                <label
+                  ><input type="checkbox" data-check="workflow" /><span
+                    >Which files get created at each stage and how you verify
+                    the result.</span
+                  ></label
+                >
+              </li>
+              <li>
+                <label
+                  ><input type="checkbox" data-check="pitch" /><span
+                    >The demo sequence, evidence, and ten-minute pitch.</span
+                  ></label
+                >
+              </li>
+            </ul>
+            <p class="small">
+              These boxes record your self-assessment, not completed application
+              features.
+            </p>
+          </div>
+          <div class="topic-card">
+            <h3>Your questions for Codex or your friend</h3>
+            <p>
+              Start with: “Which submitted diagram is our baseline?”, “Which
+              MySQL constraints and transaction boundaries implement our
+              rules?”, and “What do I still struggle to explain?” Add your own
+              questions as you study.
+            </p>
+            <label class="sr-only" for="notes"
+              >Project study questions and decisions</label
+            ><textarea
+              class="notes"
+              id="notes"
+              placeholder="Question / what I currently think / evidence needed / decision after discussion"
+            ></textarea>
+            <div class="actions notes-actions js-only">
+              <button id="download-notes" type="button">
+                Download questions as .txt</button
+              ><button id="reset-progress" type="button">
+                Reset study progress
+              </button>
+            </div>
+            <p
+              id="storage-status"
+              class="status-line"
+              role="status"
+              aria-live="polite"
+            >
+              With JavaScript enabled, this browser can remember study progress,
+              theme, and notes. Download important questions as a separate file.
+            </p>
+          </div>
+          <div class="reading-block">
+            <h3>Your next concrete task</h3>
+            <p>
+              Identify the actual submitted ER/schema and existing PPT. Then ask
+              for stage A's blogging design reconciliation and physical mapping,
+              using MySQL, parameterized SQL, and the course's database
+              expectations. Continue with one verified vertical slice before
+              expanding the product.
+            </p>
+            <p class="small">
+              Next: update the handoff with decisions from that conversation,
+              not just the fact that you read this guide.
+            </p>
+          </div>
+          <details class="checkpoint">
+            <summary>Checkpoint: what should your next prompt include?</summary>
+            <p>
+              The current stage, a bounded deliverable, source files, the
+              relevant design/stack constraints, acceptance cases, verification
+              commands/evidence, and a request to explain the result. Ask
+              remaining conceptual questions before accepting a design you
+              cannot defend.
+            </p>
+          </details>
+          <p class="go-deeper">
+            Go deeper: revisit any unchecked chapter. A recorded doubt is a
+            useful outcome of the hour.
+          </p>
+        </section>
+
+        <section id="sources" class="chapter" aria-labelledby="sources-title">
+          <p class="eyebrow">Reference shelf / optional follow-up</p>
+          <h2 id="sources-title">Read the source when a decision needs it</h2>
+          <div class="grid two">
+            <div class="topic-card">
+              <h3>Project sources</h3>
+              <ul class="source-list">
+                <li>
+                  <a href="design.md">design.md</a> — visual tokens and handbook
+                  behavior.
+                </li>
+                <li>
+                  <a href="docs/requirements/course-project.md"
+                    >Course requirements</a
+                  >
+                  — supplied announcements and their limits.
+                </li>
+                <li>
+                  <a href="docs/design/proposed-model.md">Proposed model</a> —
+                  entities and the five operation choices.
+                </li>
+                <li>
+                  <a href="docs/design/change-log.md">Design-change log</a> —
+                  submitted-baseline reconciliation.
+                </li>
+                <li>
+                  <a href="docs/context/handoff.md">Current handoff</a> —
+                  repository state and next steps.
+                </li>
+                <li>
+                  <a href="docs/testing/manual-checklist.md"
+                    >Manual testing checklist</a
+                  >
+                  — user-run HTML, SQL, and future application checks.
+                </li>
+              </ul>
+            </div>
+            <div class="topic-card">
+              <h3>Primary technical documentation</h3>
+              <ul class="source-list">
+                <li>
+                  <a href="https://react.dev/learn/typescript"
+                    >React + TypeScript</a
+                  >
+                  — TSX and typed components.
+                </li>
+                <li>
+                  <a href="https://tailwindcss.com/docs/installation/using-vite"
+                    >Tailwind + Vite</a
+                  >
+                  — official integration workflow.
+                </li>
+                <li>
+                  <a href="https://dev.mysql.com/doc/refman/8.4/en/commit.html"
+                    >MySQL transactions</a
+                  >
+                  — START TRANSACTION, COMMIT, ROLLBACK.
+                </li>
+                <li>
+                  <a
+                    href="https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html"
+                    >InnoDB locking reads</a
+                  >
+                  — coordinate concurrent operations.
+                </li>
+                <li>
+                  <a href="https://sidorares.github.io/node-mysql2/docs"
+                    >mysql2</a
+                  >
+                  — TypeScript/Node driver, prepared statements, and
+                  connections.
+                </li>
+              </ul>
+              <p class="small">
+                Technical sources checked on 12 November 2026. Pin actual
+                dependencies when implementation begins.
+              </p>
+            </div>
+          </div>
+        </section>
+        <footer class="footer">
+          <p class="small">
+            An offline study artifact. No application backend, live DB, or
+            external scripts.<br />Based on your project documents and
+            <code>design.md</code>.
+          </p>
+          <a class="pill" href="#main">Back to the beginning</a>
+        </footer>
+      </main>
+    </div>
+    <script>
+      (() => {
+        "use strict";
+        document.documentElement.classList.add("js");
+        const chapters = [
+          ...document.querySelectorAll(".chapter[data-minutes]"),
+        ];
+        const key = "blogging-dbms-field-guide-v1";
+        const defaults = { theme: "dark", learned: [], checks: [], notes: "" };
+        let state = { ...defaults };
+        let storageWorks = true;
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || "null");
+          if (saved && typeof saved === "object") {
+            state.theme = saved.theme === "light" ? "light" : "dark";
+            state.learned = Array.isArray(saved.learned)
+              ? saved.learned.filter((x) => chapters.some((c) => c.id === x))
+              : [];
+            state.checks = Array.isArray(saved.checks)
+              ? saved.checks.filter((x) => typeof x === "string")
+              : [];
+            state.notes = typeof saved.notes === "string" ? saved.notes : "";
+          }
+          localStorage.setItem(key, JSON.stringify(state));
+        } catch {
+          storageWorks = false;
+        }
+        const storageStatus = document.getElementById("storage-status");
+        function save() {
+          try {
+            localStorage.setItem(key, JSON.stringify(state));
+            storageWorks = true;
+            storageStatus.textContent =
+              "Saved in this browser. Download important questions before changing browsers or clearing site data.";
+          } catch {
+            storageWorks = false;
+            storageStatus.textContent =
+              "Browser storage is unavailable. Changes last for this page session; download your questions before closing.";
+          }
+        }
+        storageStatus.textContent = storageWorks
+          ? "Saved in this browser only. Notes and learning progress are separate from project completion."
+          : "Browser storage is unavailable. Progress works for this session; download your questions before closing.";
+        const themeButton = document.getElementById("theme");
+        function paintTheme() {
+          document.documentElement.dataset.theme = state.theme;
+          const next = state.theme === "dark" ? "light" : "dark";
+          themeButton.textContent =
+            next === "light" ? "Light mode" : "Dark mode";
+          themeButton.setAttribute("aria-label", `Switch to ${next} theme`);
+        }
+        paintTheme();
+        themeButton.addEventListener("click", () => {
+          state.theme = state.theme === "dark" ? "light" : "dark";
+          paintTheme();
+          save();
+        });
+        document
+          .getElementById("print")
+          .addEventListener("click", () => window.print());
+        let printedDetails = [];
+        window.addEventListener("beforeprint", () => {
+          printedDetails = [...document.querySelectorAll("details")].map(
+            (node) => [node, node.open],
+          );
+          printedDetails.forEach(([node]) => {
+            node.open = true;
+          });
+        });
+        window.addEventListener("afterprint", () => {
+          printedDetails.forEach(([node, wasOpen]) => {
+            node.open = wasOpen;
+          });
+          printedDetails = [];
+        });
+
+        const jump = document.getElementById("chapter-jump");
+        const actionStatus = document.getElementById("action-status");
+        const toc = document.getElementById("toc");
+        const map = document.getElementById("roadmap");
+        const tocLinks = new Map();
+        const mapLinks = new Map();
+        chapters.forEach((chapter, index) => {
+          const heading = chapter.querySelector("h2");
+          heading.tabIndex = -1;
+          const title = heading.textContent;
+          const option = document.createElement("option");
+          option.value = chapter.id;
+          option.textContent = `${String(index + 1).padStart(2, "0")} / ${title}`;
+          jump.append(option);
+          const link = document.createElement("a");
+          link.href = `#${chapter.id}`;
+          link.textContent = `${String(index + 1).padStart(2, "0")}  ${title}`;
+          toc.append(link);
+          tocLinks.set(chapter.id, link);
+          const row = document.createElement("div");
+          row.className = "map-row";
+          const stage = document.createElement("a");
+          stage.className = "stage-node";
+          stage.href = link.href;
+          const label = document.createElement("span");
+          label.textContent = `CHAPTER ${index + 1} / ${chapter.dataset.minutes} MIN`;
+          stage.dataset.label = label.textContent;
+          const name = document.createElement("strong");
+          name.textContent = title;
+          stage.append(label, name);
+          row.append(stage);
+          mapLinks.set(chapter.id, stage);
+          const branch = document.createElement("a");
+          branch.className = `branch ${chapter.dataset.side}`;
+          branch.href = `#${chapter.id}`;
+          branch.textContent = chapter.dataset.branch;
+          row.append(branch);
+          map.append(row);
+          const pager = document.createElement("nav");
+          pager.className = "pager";
+          pager.setAttribute("aria-label", `Chapter ${index + 1} navigation`);
+          const previous = document.createElement("a");
+          previous.href = index ? `#${chapters[index - 1].id}` : "#main";
+          previous.textContent = index ? "← Previous chapter" : "← Overview";
+          const next = document.createElement("a");
+          next.href =
+            index < chapters.length - 1
+              ? `#${chapters[index + 1].id}`
+              : "#sources";
+          next.textContent =
+            index < chapters.length - 1
+              ? "Next chapter →"
+              : "Reference shelf →";
+          pager.append(previous, next);
+          chapter.append(pager);
+          chapter
+            .querySelector(".learned-btn")
+            .addEventListener("click", () => {
+              state.learned = state.learned.includes(chapter.id)
+                ? state.learned.filter((x) => x !== chapter.id)
+                : [...state.learned, chapter.id];
+              paintProgress();
+              save();
+              actionStatus.textContent = `${title}: ${state.learned.includes(chapter.id) ? "Learned" : "Marked as not yet learned"}.`;
+            });
+        });
+        function refreshStageLabels() {
+          mapLinks.forEach((link, id) => {
+            link.querySelector("span").textContent =
+              `${state.learned.includes(id) ? "LEARNED / " : ""}${link.dataset.label}${link.getAttribute("aria-current") ? " / CURRENT" : ""}`;
+          });
+        }
+        function paintProgress() {
+          chapters.forEach((chapter) => {
+            const done = state.learned.includes(chapter.id);
+            const button = chapter.querySelector(".learned-btn");
+            button.setAttribute("aria-pressed", String(done));
+            button.textContent = done ? "Learned · undo" : "Mark learned";
+            tocLinks.get(chapter.id).classList.toggle("done", done);
+            mapLinks.get(chapter.id).classList.toggle("learned", done);
+          });
+          const count = chapters.filter((c) =>
+            state.learned.includes(c.id),
+          ).length;
+          document.getElementById("progress-text").textContent =
+            `${count} of ${chapters.length} chapters learned`;
+          document.getElementById("progress").value = count;
+          refreshStageLabels();
+        }
+        paintProgress();
+        function markActive(id) {
+          if (document.activeElement !== jump) jump.value = id;
+          mapLinks.forEach((link, linkId) => {
+            if (linkId === id) link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+          });
+          refreshStageLabels();
+          tocLinks.forEach((link, linkId) => {
+            link.classList.toggle("active", linkId === id);
+            if (linkId === id) link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+          });
+        }
+        markActive(chapters[0].id);
+        if ("IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries
+                .filter((e) => e.isIntersecting && !e.target.hidden)
+                .sort(
+                  (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+                )
+                .slice(0, 1)
+                .forEach((e) => markActive(e.target.id));
+            },
+            { rootMargin: "-88px 0px -50% 0px", threshold: 0 },
+          );
+          chapters.forEach((chapter) => observer.observe(chapter));
+        }
+
+        const operationSelect = document.getElementById("operation");
+        const operationCards = [
+          ...document.querySelectorAll("[data-operation]"),
+        ];
+        const search = document.getElementById("search");
+        function paintOperation() {
+          operationCards.forEach((card) => {
+            card.hidden = search.value.trim()
+              ? false
+              : card.dataset.operation !== operationSelect.value;
+          });
+        }
+        operationSelect.addEventListener("change", paintOperation);
+        paintOperation();
+        function filterGuide() {
+          const term = search.value.trim().toLocaleLowerCase();
+          paintOperation();
+          let visible = 0;
+          chapters.forEach((chapter) => {
+            const headerMatches = chapter
+              .querySelector(".chapter-header")
+              .textContent.toLocaleLowerCase()
+              .includes(term);
+            const cards = [
+              ...chapter.querySelectorAll(".topic-card, .reading-block"),
+            ];
+            cards.forEach((card) => {
+              card.hidden =
+                !!term &&
+                !headerMatches &&
+                !card.textContent.toLocaleLowerCase().includes(term);
+            });
+            chapter.querySelectorAll(".grid").forEach((grid) => {
+              grid.hidden = [...grid.querySelectorAll(".topic-card")].every(
+                (card) => card.hidden,
+              );
+            });
+            const any = cards.some((card) => !card.hidden);
+            chapter.hidden = !!term && !headerMatches && !any;
+            tocLinks.get(chapter.id).hidden = chapter.hidden;
+            if (!chapter.hidden) visible++;
+          });
+          document.getElementById("no-results").hidden = visible > 0;
+          document.getElementById("search-status").textContent = term
+            ? `${visible} of ${chapters.length} chapters match “${search.value.trim()}”. Clear search to restore the full study route.`
+            : "";
+        }
+        document.getElementById("jump-go").addEventListener("click", () => {
+          const target = document.getElementById(jump.value);
+          if (!target) return;
+          if (search.value) {
+            search.value = "";
+            filterGuide();
+          }
+          location.hash = `#${target.id}`;
+          target.scrollIntoView({ block: "start" });
+          target.querySelector("h2").focus({ preventScroll: true });
+          markActive(target.id);
+          actionStatus.textContent = `Opened chapter: ${target.querySelector("h2").textContent}.`;
+        });
+        search.addEventListener("input", filterGuide);
+        document
+          .getElementById("clear-search")
+          .addEventListener("click", () => {
+            search.value = "";
+            filterGuide();
+            search.focus();
+          });
+        document.addEventListener("keydown", (event) => {
+          const editing = event.target.matches(
+            'input,textarea,select,[contenteditable="true"]',
+          );
+          if (
+            event.key === "/" &&
+            !editing &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey
+          ) {
+            event.preventDefault();
+            search.focus();
+          }
+          if (event.key === "Escape" && document.activeElement === search) {
+            search.value = "";
+            filterGuide();
+            search.blur();
+          }
+        });
+        document.querySelectorAll('a[href^="#"]').forEach((link) =>
+          link.addEventListener("click", () => {
+            const target = document.getElementById(
+              link.getAttribute("href").slice(1),
+            );
+            if (target && target.hidden && search.value) {
+              search.value = "";
+              filterGuide();
+            }
+          }),
+        );
+
+        document.querySelectorAll("[data-copy]").forEach((button) =>
+          button.addEventListener("click", async () => {
+            const source = document.getElementById(button.dataset.copy);
+            try {
+              if (!navigator.clipboard)
+                throw new Error("Clipboard unavailable");
+              await navigator.clipboard.writeText(source.textContent);
+              button.textContent = "Copied";
+              actionStatus.textContent = "Prompt copied to clipboard.";
+            } catch {
+              const range = document.createRange();
+              range.selectNodeContents(source);
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
+              button.textContent = "Text selected · use Ctrl/Cmd+C";
+              actionStatus.textContent =
+                "Clipboard unavailable. Prompt text is selected; use Ctrl or Command plus C.";
+            }
+          }),
+        );
+        const counts = [
+          document.getElementById("count-posts"),
+          document.getElementById("count-revisions"),
+          document.getElementById("count-links"),
+        ];
+        const result = document.getElementById("tx-result");
+        function showTransaction(reset = false) {
+          const failed =
+            !reset && document.getElementById("tx-outcome").value === "fail";
+          const committed = reset || failed ? [2, 2, 3] : [3, 3, 5];
+          counts.forEach((node, index) => {
+            node.textContent = committed[index];
+          });
+          result.replaceChildren();
+          const title = document.createElement("strong");
+          title.textContent = reset
+            ? "Starting committed state"
+            : failed
+              ? "Aborted · no new records committed"
+              : "Committed · all related records saved";
+          const explanation = document.createElement("p");
+          explanation.textContent = reset
+            ? "The example fixture is restored to 2 posts, 2 revisions, and 3 tag links."
+            : failed
+              ? "Create post → create revision → tag link fails → abort transaction. Earlier writes were staged only; the committed counts stay 2 / 2 / 3."
+              : "Create post → create revision → create two tag links → commit. The committed counts become 3 / 3 / 5.";
+          const note = document.createElement("p");
+          note.className = "small";
+          note.textContent =
+            "Illustrative browser model only. This does not connect to MySQL or prove the future application works.";
+          result.append(title, explanation, note);
+        }
+        document
+          .getElementById("run-tx")
+          .addEventListener("click", () => showTransaction());
+        document
+          .getElementById("reset-tx")
+          .addEventListener("click", () => showTransaction(true));
+        const notes = document.getElementById("notes");
+        notes.value = state.notes;
+        notes.addEventListener("input", () => {
+          state.notes = notes.value;
+          save();
+        });
+        document.querySelectorAll("[data-check]").forEach((box) => {
+          box.checked = state.checks.includes(box.dataset.check);
+          box.addEventListener("change", () => {
+            state.checks = [
+              ...document.querySelectorAll("[data-check]:checked"),
+            ].map((x) => x.dataset.check);
+            save();
+          });
+        });
+        document
+          .getElementById("download-notes")
+          .addEventListener("click", () => {
+            const text = `Blogging DBMS project — study questions\n\n${notes.value || "(No questions written yet.)"}\n\nLearned chapters: ${state.learned.map((id) => document.querySelector(`#${id} h2`).textContent).join("; ") || "None marked"}\n`;
+            const url = URL.createObjectURL(
+              new Blob([text], { type: "text/plain;charset=utf-8" }),
+            );
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "blogging-project-study-notes.txt";
+            document.body.append(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            storageStatus.textContent =
+              "Questions download requested. Check your browser downloads; browser storage remains separate.";
+          });
+        document
+          .getElementById("reset-progress")
+          .addEventListener("click", () => {
+            state.learned = [];
+            state.checks = [];
+            paintProgress();
+            document.querySelectorAll("[data-check]").forEach((box) => {
+              box.checked = false;
+            });
+            save();
+            storageStatus.textContent +=
+              " Study progress reset; your written questions were kept.";
+          });
+      })();
+    </script>
+  </body>
+</html>

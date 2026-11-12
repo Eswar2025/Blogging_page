@@ -56,8 +56,10 @@ P.S. CRs are requested to finalise the possible days for the end-semester evalua
 ## User clarifications and interpretation
 
 - This repository will contain all future coding and deliverables.
+- The user has chosen **SQL/MySQL only**, because this is a course project and SQL is currently familiar to them. Keep React TypeScript/TSX, Tailwind CSS, Node, and Express. The earlier document-database stack preference is superseded. Their workflow involves prompting Codex, verifying outputs, debugging, and creating presentations. They requested a detailed offline guide following `design.md`, for about one hour of study/discussion rather than one hour of implementation.
+- The user will run browser and database verification themselves. Provide instructions and expected results; do not take over their laptop/browser or use GUI automation unless explicitly requested later.
 - No professor example ER diagram exists; a suitable notation/model may be suggested.
 - The user identifies the Claude-created ER diagrams and another PPT as previous work and permits changes if needed. The available diagrams/report describe inventory management, while the allotted title is blogging. The actual submitted baseline needs reconciling; the PPT is not present here.
 - Design changes require technical justification. The announcement does not specify a separate approval process.
 - Five reusable functions, atomic interdependent operations, failure handling, ER fidelity, a live demo, and a 10-minute pitch plus Q&A are requirements. Specific blogging features and function names are proposals.
-- No final deadline, evaluation date, team size, mandated DBMS/framework, or fixed target normal form was supplied. A normalized schema needs a defensible dependency/normalization explanation; 3NF is our suggested target, subject to course expectations.
+- No final deadline, evaluation date, team size, course-mandated DBMS/framework, or fixed target normal form was supplied. The user's confirmed MySQL choice is recorded separately from course mandates; database selection is settled, while installed version and dependency versions remain to be recorded. A normalized schema needs a defensible dependency/normalization explanation; 3NF is our suggested target, subject to course expectations.

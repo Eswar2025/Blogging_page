@@ -18,3 +18,7 @@ Preserve the actual submission unchanged when supplied, recording filename/versi
 For each change, record the submitted entity/relationship/key/constraint, replacement, technical reason, normalization consequences, data/migration impact, affected artifacts/code, and validation performed. State whether it is proposed or implemented. Add professor feedback only if actually received.
 
 No ER source, schema, or application behavior has been changed by this documentation update.
+
+## DC-003: confirmed SQL/MySQL implementation plan
+
+The user explicitly selected MySQL, superseding the earlier document-database proposal, because this is a DBMS course project and they currently know SQL. Keep React TSX, Tailwind, Node, and Express. Plan InnoDB tables, explicit schema/seed SQL, parameterized mysql2 queries, and connection-scoped transactions. No implemented database or data migration exists yet; this changes the plan/documentation, not the submitted-baseline record. Maintain ER fidelity and justify actual schema changes separately.

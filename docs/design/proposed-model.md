@@ -2,6 +2,12 @@
 
 **Status: suggestion, not the submitted design or an implemented schema.** Reconcile with the actual mid-semester submission before finalizing changes. See the [requirements record](../requirements/course-project.md) and [design-change log](change-log.md).
 
+## Implementation choice
+
+Use **MySQL with InnoDB**, React TSX, Tailwind CSS, Node, and Express TypeScript. The user chose SQL/MySQL for course suitability and familiarity. Prefer explicit schema/seed/migration SQL and parameterized `mysql2/promise` queries over an ORM initially. The logical relations below map to MySQL tables; types, installed version, and exact constraints will be finalized during schema work.
+
+Each service transaction must acquire one connection, begin a transaction, execute all related reads/writes on that connection, commit or roll back, and release it in finally. Foreign keys enforce row references; matching subtypes, roles, and cross-row workflow rules need additional enforcement.
+
 ## Product direction and notation
 
 Suggested problem: readers need to identify human and agent authors while following discussions and content revisions. A blogging database can make authorship explicit, preserve revisions, keep relationships consistent, and support accountable moderation. This is a suggested product pitch, not a detailed statement supplied by the professor.
@@ -43,7 +49,7 @@ erDiagram
     HUMAN_PROFILE ||--o{ MODERATION_ACTION : performs
 ```
 
-The optional subtype edges alone cannot enforce exactly one matching subtype for each account; enforce total/disjoint specialization separately. Other proposed rules include at least one revision per post, human ownership of agents, appropriate moderator roles, and a comment's parent belonging to the same post. Decide which rules need constraints versus transactional methods/database logic after selecting the DBMS.
+The optional subtype edges alone cannot enforce exactly one matching subtype for each account; enforce total/disjoint specialization separately. Other proposed rules include at least one revision per post, human ownership of agents, appropriate moderator roles, and a comment's parent belonging to the same post. Decide which rules need constraints versus transactional methods/database logic when implementing the MySQL schema.
 
 ## Five suggested reusable functions
 
@@ -59,7 +65,7 @@ Signatures and operation choices are illustrative. Human registration and readin
 
 Repeatedly callable means legitimate operations can be performed multiple times without rebuilding the database. Define duplicates and invalid calls: a stale revision or repeated transition may return a clear conflict with no writes. Identical inputs need not always succeed; idempotency keys are an optional later decision.
 
-Use one transaction for each logical operation and appropriate protection for authorization/state checks. Specify isolation, locking, or conditional updates for revision and comment/moderation races once the DBMS is chosen. Return actionable errors with safe diagnostic context. Authentication, agent credentials, edit permissions, post status transitions, and deletion policy remain design decisions.
+Use one transaction for each logical operation and appropriate protection for authorization/state checks. Specify MySQL isolation, SELECT ... FOR UPDATE locking, or conditional updates for revision and comment/moderation races during MySQL implementation. Return actionable errors with safe diagnostic context. Authentication, agent credentials, edit permissions, post status transitions, and deletion policy remain design decisions.
 
 ## Demo and pitch suggestion
 

@@ -6,6 +6,12 @@ Complete **Database Management System for a Blogging Site for AI agents and Huma
 
 Read `README.md`, `docs/context/handoff.md`, and `docs/requirements/course-project.md` first. Inspect the working tree and new sources; preserve unrelated user edits.
 
+The chosen database is **SQL/MySQL only**, selected by the user for this DBMS course and their current SQL knowledge. Keep **React with TypeScript/TSX, Tailwind CSS, Express, and Node.js**. Use InnoDB tables, explicit schema/migration/seed SQL, and readable parameterized queries through `mysql2/promise` as the initial data-layer plan; no ORM is required. Vite is the suggested frontend tool. Do not re-ask the database choice or revert to a document database. The application is not scaffolded yet.
+
+**Verification preference:** do not control the user's laptop/browser or use GUI automation unless they explicitly request it later. Provide concise manual test steps, exact commands, expected outputs, and a place to record failures. Use inexpensive file/syntax checks for this documentation work; leave live browser/database testing to the user. See `docs/testing/manual-checklist.md`.
+
+For handbooks, roadmaps, and codebase walkthroughs, read the user-supplied `design.md`. Preserve its monochrome palette, offline single-file format, typography, theme behavior, and accessible responsive patterns. `Project_Workflow.html` is the current interactive study/build guide. Keep it consistent with material architecture changes while distinguishing plans from implemented work.
+
 ## Sources and historical material
 
 - The latest user instructions/course announcements establish the blogging topic and final-evaluation scope. The earlier inventory-only Part 1 scope is superseded.
@@ -27,11 +33,11 @@ Read `README.md`, `docs/context/handoff.md`, and `docs/requirements/course-proje
 ## Design, implementation, and validation
 
 - Reconcile the submitted baseline with the allotted topic; continue independent documentation and clearly marked proposals while inputs are pending.
-- Check course/user stack constraints before implementation. If unconstrained, choose a practical DBMS/framework and record why. Avoid speculative dependencies and empty scaffolding.
+- Use the confirmed MySQL + React/Express/Node TypeScript stack; establish the installed MySQL version and compatible dependency versions when implementing. Avoid speculative dependencies and empty scaffolding.
 - Distinguish human and agent identities/permissions. Ownership, moderation roles, authentication, and live AI integration are design choices to resolve.
 - Document keys, nullability, cardinalities, business rules, functional dependencies, and normalization rationale. Do not claim 3NF solely from table appearance. Avoid unexplained duplicated content or counters.
 - Keep diagram sources/exports, normalized schema, migrations, code, and reports consistent. Review rendered diagrams and generated documents/presentations after edits. Label historical/stale exports clearly.
-- Place transactions at reusable method boundaries and protect authorization/state checks appropriately. Cover relevant uniqueness, referential integrity, duplicate calls, revision conflicts, and concurrency. Repeatedly callable does not mean identical duplicate input must always succeed; define clean rejection behavior.
+- Use InnoDB transactions at reusable method boundaries, with every related query on the same acquired connection, explicit commit/rollback, and release in finally. Parameterize SQL values. Protect authorization/state checks with justified locking or conditional updates where needed. Cover relevant uniqueness, referential integrity, duplicate calls, revision conflicts, and concurrency. Repeatedly callable does not mean identical duplicate input must always succeed; define clean rejection behavior.
 - Validate success and rollback paths on the selected DBMS, including a failure after an early write. State exactly what was checked and remaining limitations. Keep reproducible setup, migration, seed, run, and demo commands in README.
 - Modeling agent accounts does not inherently require paid/live model services. Prefer a repeatable demo unless live generation is a confirmed requirement.
 

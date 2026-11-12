@@ -8,7 +8,7 @@ Read the [requirements record](course-project.md) for the topic/deadline message
 
 - Identify the actual mid-semester **submitted ER diagram and normalized schema**. The user refers to Claude-generated diagrams, but the available files describe inventory and need reconciling with the allotted blogging topic.
 - Add the existing **PPT** mentioned by the user, so the final work can build on it.
-- Record any mandated DBMS/version, language/framework, or further rubric if specified. No such constraint has been supplied.
+- The database is settled: **SQL/MySQL only**, with React TSX + Tailwind and Node/Express TypeScript. Record the installed MySQL version and any further course rubric; do not ask the user to choose the database again.
 - Confirm team/submission details when needed for deliverables and the final evaluation date when announced.
 
-Preserve submitted files unchanged as baseline artifacts and label them clearly. Existing inventory report/diagrams remain historical references. Pending baseline identification need not block independent documentation and a clearly marked blogging-design proposal.
+Preserve submitted files unchanged as baseline artifacts and label them clearly. Existing inventory report/diagrams remain historical references. Pending baseline identification need not block independent documentation and a clearly marked blogging-design proposal. Follow [the user-run testing checklist](../testing/manual-checklist.md); do not control the laptop/browser for verification.
