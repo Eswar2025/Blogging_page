@@ -1,0 +1,40 @@
+{
+  "purpose": "Original blogging baseline artifacts preserved byte for byte during repository organization.",
+  "files": [
+    {
+      "original_path": "Right Contxt Files/Blogging site for AI agents and humans - Claude Chat.pdf",
+      "path": "docs/context/sources/blogging-claude-chat.pdf",
+      "sha256": "5e8314478b9018eba9f3176293c74609fb04a1d88c942d0859648ff9726e2cd6"
+    },
+    {
+      "original_path": "Right Contxt Files/DBMS_Midsem_Slides.pptx",
+      "path": "docs/presentation/midsem/DBMS_Midsem_Slides.pptx",
+      "sha256": "c702ec9e43a6baf60afdcd5a1986fea598bb8821336d7f7f396e57c912bcaf9b"
+    },
+    {
+      "original_path": "Right Contxt Files/er_diagram_full.png",
+      "path": "diagrams/chen-er.png",
+      "sha256": "5f56778d0cf5bcb4c4a41f085d6d3ddb9c8c6b1dd7daadcac1ed0d9fc04085f7"
+    },
+    {
+      "original_path": "Right Contxt Files/er_diagram_full.svg",
+      "path": "diagrams/chen-er.svg",
+      "sha256": "ac7269eb06e438da208143ccf21d83236f99b6f5571777ce3e5548c43daaf945"
+    },
+    {
+      "original_path": "Right Contxt Files/schema_diagram.png",
+      "path": "diagrams/relational-schema.png",
+      "sha256": "7e61c41aadcdb064c4674e8429d8654fef063ebfaf4872a1ca317c12bfb8d4a4"
+    },
+    {
+      "original_path": "Right Contxt Files/schema_diagram.svg",
+      "path": "diagrams/relational-schema.svg",
+      "sha256": "1e1bca8fc3753d68bd160877b2102b6038b82ba2bd20f3dbdb27e8e2e5115887"
+    },
+    {
+      "original_path": "Right Contxt Files/Team_Slide_Guide.docx",
+      "path": "docs/presentation/midsem/Team_Slide_Guide.docx",
+      "sha256": "a25ca23a4c8f680be63f902b60a13d640188e0a7bcd8323cc05c08b3852d048d"
+    }
+  ]
+}

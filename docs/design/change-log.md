@@ -1,24 +1,22 @@
-# Design changes relative to the submitted ER model
+# Design and context change log
 
-## Baseline status
+## Recovered baseline
 
-The allotted topic is **Database Management System for a Blogging Site for AI agents and Humans**. The user identifies the Claude-generated ER diagrams and another PPT as previous work and permits changes if needed. The available diagram/report files describe inventory management, and the PPT is absent. The actual submitted baseline is therefore not identified unambiguously.
+The correct user-supplied blogging context is organized under `diagrams/`, `docs/context/sources/` and `docs/presentation/midsem/`. The Chen ER, 14-table schema, 20-slide mid-semester deck, team guide and 33-page chat retain their original content; the manifest records old/current paths and hashes. Use [baseline.md](baseline.md) and [source review](../context/blogging-source-review.md). File presence does not prove which revision the professor received; retain the actual submitted snapshot when identified.
 
-Preserve the actual submission unchanged when supplied, recording filename/version and submission date. Compare it with the final model and document technical reasons for differences. Permission to revise does not remove the course's justification requirement. No professor approval is claimed here.
+## Records
 
-## Pending change records
+| ID | Earlier state | Current decision | Reason and status |
+| --- | --- | --- | --- |
+| DC-001 | Inventory files treated as the active assignment | Confirmed allotted blogging topic | Context correction; unrelated working files subsequently removed, committed versions remain in Git history |
+| DC-002 | Nine-table blogging proposal with ACCOUNT/HUMAN_PROFILE/AGENT_PROFILE/MODERATION_ACTION | Supplied 14-table actor-based model | Correct artifacts now available; obsolete proposal removed, earlier committed version recoverable; no implemented data migration exists |
+| DC-003 | Document-database proposal | MySQL/InnoDB + readable mysql2 SQL; React TSX/Tailwind + Node/Express TypeScript | Latest user choices; old vanilla/no-TypeScript advice is historical |
+| DC-004 | Human author selector and owner posting on behalf of agents | Human sessions and independent agent API-key clients resolve to actor_id | Matches recovered workflow; ownership/key management remains, impersonation is not a required UI feature |
+| DC-005 | Evaluated methods emphasized registration/direct revision/moderation | publishPost, addComment, castVote, submitEditProposal, reviewEditProposal | Better demonstrates recovered co-writing/vote/provenance model; these are proposed choices, not professor-mandated names |
+| DC-006 | Flat supplied context folder, unrelated inventory files, competing historical proposal | Purpose-based sources/diagrams/presentation layout and meaningful implementation guides | User explicitly requested cleanup; seven original artifact hashes unchanged, obsolete files removed without rewriting Git history; no schema behavior change |
 
-| ID | Before | Proposed after | Technical reason | Status / evidence needed |
-| --- | --- | --- | --- | --- |
-| DC-001 | Repository overview treated inventory management as the assignment | Use the user-confirmed blogging title and final-evaluation requirements | Correct repository context to the exact allotted topic | Documentation corrected; submitted design still needs reconciliation |
-| DC-002 | Available inventory entities and relationships | Human/agent accounts, posts, revisions, comments, tags, moderation | Directly model the allotted blogging domain and its key operations | Proposal only; compare against actual submitted schema before characterizing deviations |
+## Pending technical decisions
 
-## Record each implemented revision
+Resolve source-target XOR, actor subtype enforcement, same-post comments, result-revision uniqueness, human reviewer policy, stale-state semantics, transaction ownership and audit guarantees. Recheck the slides' normalization claims and relationship count. Views, triggers, approval procedure, FULLTEXT and indexing evidence are source ideas to prioritize deliberately; do not claim they already exist.
 
-For each change, record the submitted entity/relationship/key/constraint, replacement, technical reason, normalization consequences, data/migration impact, affected artifacts/code, and validation performed. State whether it is proposed or implemented. Add professor feedback only if actually received.
-
-No ER source, schema, or application behavior has been changed by this documentation update.
-
-## DC-003: confirmed SQL/MySQL implementation plan
-
-The user explicitly selected MySQL, superseding the earlier document-database proposal, because this is a DBMS course project and they currently know SQL. Keep React TSX, Tailwind, Node, and Express. Plan InnoDB tables, explicit schema/seed SQL, parameterized mysql2 queries, and connection-scoped transactions. No implemented database or data migration exists yet; this changes the plan/documentation, not the submitted-baseline record. Maintain ER fidelity and justify actual schema changes separately.
+For each actual implementation deviation record before/after, technical reason, normalization and data/schema impact, affected diagrams/code/docs, and validation. Preserve the baseline files and distinguish a correction to repository understanding from an approved change to a submitted diagram. Add professor feedback only if actually received. No professor approval or formal approval process is invented.

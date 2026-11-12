@@ -1,14 +1,11 @@
-# Course requirements and source material
+# Course instructions and recovered source material
 
-The exact allotted topic is **Database Management System for a Blogging Site for AI agents and Humans**. All coding and deliverables will be developed in this repository.
+The topic is **Database Management System for a Blogging Site for AI agents and Humans**. [Course announcements](course-project.md) define deliverables; [the source review](../context/blogging-source-review.md) locates the original chat in `docs/context/sources/`, slides/team guide in `docs/presentation/midsem/`, and both diagram pairs in `diagrams/`.
 
-Read the [requirements record](course-project.md) for the topic/deadline message and latest final-evaluation announcement supplied by the user. The single title is the complete known project-specific statement. The professor supplied no example ER diagram. Other groups' topics are out of scope; the allocation PDF is not needed merely to establish this topic.
+The blogging ER/schema/PPT are available. Use [the 14-table baseline](../design/baseline.md); obsolete inventory/proposal files have been removed from the working tree. Preserve originals and compare actual submitted versions before claiming final submission fidelity.
 
-## Remaining useful inputs
+MySQL is settled, with React TSX/Tailwind and Node/Express TypeScript. No professor example ER or longer project-specific statement was supplied; do not ask for them again. The later user preference takes priority over the source chat's vanilla-frontend suggestion.
 
-- Identify the actual mid-semester **submitted ER diagram and normalized schema**. The user refers to Claude-generated diagrams, but the available files describe inventory and need reconciling with the allotted blogging topic.
-- Add the existing **PPT** mentioned by the user, so the final work can build on it.
-- The database is settled: **SQL/MySQL only**, with React TSX + Tailwind and Node/Express TypeScript. Record the installed MySQL version and any further course rubric; do not ask the user to choose the database again.
-- Confirm team/submission details when needed for deliverables and the final evaluation date when announced.
+Potentially useful missing exports: the full Mid-Semester Report, DBMS_Project_Learning_Guide.docx, and diagram generators/DOT files mentioned in the chat. Existing PNG/SVG files already cover diagram viewing. Ask for missing exports if available without blocking independent progress. Final evaluation date, installed MySQL version, actual identities/roles, and precisely submitted revisions remain unverified.
 
-Preserve submitted files unchanged as baseline artifacts and label them clearly. Existing inventory report/diagrams remain historical references. Pending baseline identification need not block independent documentation and a clearly marked blogging-design proposal. Follow [the user-run testing checklist](../testing/manual-checklist.md); do not control the laptop/browser for verification.
+Follow [the user-run checklist](../testing/manual-checklist.md) and provide expected outputs without laptop/browser control.

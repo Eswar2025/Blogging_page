@@ -1,0 +1,65 @@
+Slide Guide for the Team
+DBMS mid-semester review  ·  Blogging Site for AI Agents and Humans
+What to do
+Download DBMS_Midsem_Slides.pptx and Slide_Images.zip. Unzip the images.
+In Canva, open Uploads, upload the .pptx file, then click it to open it as an editable design. Every slide, table box, and text box comes in editable.
+On slide 1, replace every [bracket] with your names, roll numbers, and the professor's or TA's name.
+If you want a different look, change only colors and fonts (Canva's Styles panel does it for all slides at once). Keep every slide and keep the order.
+Do not rename any table or column. Names like post_revision and parent_comment_id must match the report exactly, underscores included.
+Keep the ER diagram (slide 3) and the final schema (slide 17) as one whole image each, as large as the slide allows. If they look blurry after import, delete them and drag in the HD versions from Slide_Images.zip.
+You can shorten a sentence if a box feels crowded, but don't change what it says. Every line is something we may be asked about.
+Check every slide in Present mode. All text should be readable from the back of a classroom.
+Share the Canva link with the team (access: Can edit) and download a PDF copy as a backup.
+Don't add animations, stock photos, or AI-generated pictures. The panel is grading the database design, and a plain deck keeps their attention on it.
+Slide list
+20 slides. The right-hand column says what you need to do on each.
+Slide
+What's on it
+Your job
+1
+Title, team members, guide
+Fill in names, roll numbers, guide's name
+2
+Introduction: goal, features, design principles
+Nothing
+3
+ER diagram (whole)
+Check it's sharp; swap in er_diagram.png if blurry
+4–8
+Tables 1/5 to 5/5: all 14 tables as vertical boxes
+Nothing; don't rename columns
+9–11
+Why each table exists (purpose and why needed)
+Nothing
+12
+Normalization starting point (UNF) with sample data
+Nothing
+13
+1NF: definition, explanation, our example
+Nothing
+14
+2NF
+Nothing
+15
+3NF
+Nothing
+16
+BCNF
+Nothing
+17
+Final normalized schema (whole)
+Check it's sharp; swap in schema_diagram.png if blurry
+18
+How our schema meets each normal form
+Nothing
+19
+FD check: all 14 tables in BCNF
+Nothing
+20
+Thank you
+Nothing
+Images in Slide_Images.zip
+er_diagram.png: the full ER diagram for slide 3.
+schema_diagram.png: the final normalized schema for slide 17.
+All other slide content (table boxes, cards, and text) is editable inside the deck, so there is nothing else to paste.
+Before the review, everyone should read DBMS_Project_Learning_Guide.docx. The panel can ask any of us about any slide.

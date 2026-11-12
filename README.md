@@ -1,83 +1,93 @@
 # Database Management System for a Blogging Site for AI agents and Humans
 
-This repository is the working home for the **entire course project**: requirements, ER diagrams, normalized schema, SQL/database implementation, application code, five reusable prototype functions, tests, reports, and the final presentation. All further coding and project work will continue here.
+This repository is the home for the complete course/resume project: ER design, normalized schema, MySQL SQL, backend, React TSX frontend, agent client, tests, reports, and final presentation.
 
-The exact allotted topic is **"Database Management System for a Blogging Site for AI agents and Humans"**. A suggested product direction is a blogging platform where humans and AI agents have clearly identified accounts and can publish and discuss posts. Specific features are proposals until reconciled with the submitted ER design.
+Humans use the website. Agents use the API with their own scoped keys. Both are actors that can publish, comment, vote, and propose edits. Authorized humans review edit proposals; approval creates a new attributed revision. Citations, provenance, and audit history make the collaboration traceable.
 
-Open [the interactive project field guide](Project_Workflow.html) in a browser for a **60-minute study route** through architecture, proposed files, database operations, build stages, Codex prompts, debugging, and the final presentation. It follows [design.md](design.md), works offline, and includes search, theme switching, study progress, notes, and a browser-only transaction simulation. This is a learning artifact; its proposed application files are not implemented yet.
+## Start here
 
-## Course requirements
+1. Open [Project_Workflow.html](Project_Workflow.html) in a browser for the updated 60-minute learning/build route.
+2. Read [the recovered 14-table baseline](docs/design/baseline.md) and [source review](docs/context/blogging-source-review.md).
+3. Continue with [AGENTS.md](AGENTS.md), [the current handoff](docs/context/handoff.md), and [the manual checklist](docs/testing/manual-checklist.md).
 
-The mid-semester requirement was a report containing **ER diagrams and normalized schema**, due **25 October 2026**. This is the historical mid-semester deadline; no final-submission or evaluation date has been provided.
+## Correct source material and current status
 
-The latest announcement requires:
+The [original blogging sources](docs/context/blogging-source-review.md) are organized by purpose: the 33-page chat PDF under `docs/context/sources/`, the 20-slide deck and team guide under `docs/presentation/midsem/`, and the Chen ER/table-schema SVG+PNG pairs under `diagrams/`. All seven artifacts retain their original contents. Searchable extracts and a path/hash manifest make them easy to inspect and verify.
 
-- Continue the same allotted project; titles will not be shuffled.
-- Faithfully implement the submitted ER diagram. Any changes need clear, technically sound justification.
-- Implement **five meaningful prototype functions as reusable methods**, callable repeatedly. Interdependent operations in a logical transaction must succeed or roll back together.
-- Handle failures and provide enough error information for investigation and troubleshooting.
-- Give a **live demonstration**. Every member must understand the complete project; grading is at team level.
-- Deliver a **10-minute Shark Tank-style pitch**, followed by Q&A: problem, solution, design effectiveness, the five operations, and product value. Teams choose presenters; everyone must be ready for questions.
+The recovered design has **11 conceptual entity sets, 2 weak entities, and 14 relational tables**:
 
-The [requirements record](docs/requirements/course-project.md) preserves the supplied messages. The professor provided **no example ER diagram**, so we can choose a clear conventional notation.
+```text
+actor, human_user, ai_agent, api_key,
+post, post_revision, revision_source, tag, post_tag,
+comment, post_vote, comment_vote, edit_proposal, audit_log
+```
 
-## Current status and design mismatch
+Use those names and columns from the actual source diagrams. Unrelated inventory material and the superseded proposal have been removed from the working tree. [The migration note](docs/context/repository-migration.md) records what moved/was removed and how earlier committed material remains recoverable.
 
-The user identifies the existing Claude-generated ER diagrams and another PPT as previous work and says they may be revised. The available diagram/report files describe **Inventory and Warehouse Management**, while the confirmed allotted topic is the blogging site. The PPT and a verified blogging-site submitted ER/schema are not present.
+**No executable application, SQL schema, seed data, agent script, or application test suite exists yet.** Recovered design files are evidence of prior work, not proof of professor approval or an implemented database. The missing full report/learning guide and several technical review questions are recorded in the source review/baseline.
 
-Resolve this mismatch before claiming that the final implementation matches the submission. Preserve the actual submitted design, compare it with the proposed model, and record technical reasons for changes in the [design-change log](docs/design/change-log.md). Existing inventory files remain historical references.
+## Stack and product boundaries
 
-There is **no executable blogging application, database implementation, or application test suite** yet. The confirmed stack is **MySQL + Express + Node.js + React with TypeScript/TSX and Tailwind CSS**. The user chose SQL/MySQL for course suitability and familiarity. Use InnoDB tables and readable parameterized SQL through `mysql2/promise`; Vite is the suggested frontend tool. Dependency versions and authentication remain to be chosen. A [proposed blogging model and five functions](docs/design/proposed-model.md) offer a starting point; they are not approved or implemented features.
+- **MySQL/InnoDB**, readable parameterized SQL via `mysql2/promise`, Node/Express TypeScript, **React TSX + Tailwind CSS**; Vite is suggested. Record actual installed versions during setup.
+- Human login/session and agent API keys resolve to one actor identity. Human publishing uses the logged-in human; agent publishing comes from its own authenticated client. An agent dashboard manages ownership/keys, not a default browser author-impersonation selector.
+- Keep revision provenance, citations, threaded comments, separate post/comment votes, edit proposals, key permission flags, and audit history.
+- Current content, vote scores, and reputation are derived through queries/views. Keep title/body in revisions. Do not silently add stored pointers/counters.
+- No follow/flag/scope-join/session/rate-limit-window core tables or dedicated moderation queue. Basic moderator status permissions remain possible using existing columns/audit history.
+- Start with a scripted agent. Optional LLM integration, deployment, performance evidence, and stronger infrastructure come after the database/API are defensible.
+
+## Five proposed evaluation functions
+
+`publishPost`, `addComment`, `castVote`, `submitEditProposal`, and `reviewEditProposal` demonstrate the recovered model. Human/agent registration, key issuance/revocation, authentication, reading/search, and direct-author editing remain supporting work. The professor requires five reusable functions; these names are our current implementation proposal.
+
+Use one transaction-owning layer and one acquired MySQL connection for each logical operation. Verify success, late-failure rollback, repeated calls, authorization, and relevant races. Proposal review must protect against stale revisions and duplicate concurrent approvals.
+
+## Course deliverables
+
+The mid-semester report required ER diagrams and normalized schema by **25 October 2026**. The supplied mid-semester diagrams use **Chen notation** for the conceptual model and a separate **Crow's Foot table view**. The slides claim BCNF; validate the actual dependencies rather than repeating that claim as proven.
+
+The final announcement requires the same allotted topic, faithful implementation of the submitted ER or technically justified changes, five reusable functions with atomic interdependent operations and useful errors, a live demo, and a **10-minute Shark Tank pitch plus Q&A**. Every member must understand the entire project. No final date has been supplied. See [the announcement record](docs/requirements/course-project.md) and [change log](docs/design/change-log.md).
 
 ## Repository guide
 
 ```text
-AGENTS.md                         Instructions for continuing the whole project
-README.md                         Overview, status, and requirements
-Project_Workflow.html              Offline interactive project field guide
-design.md                         User-supplied handbook design system
-.gitignore                        Temporary-file exclusions
-diagrams/                         Historical inventory Draw.io and PNG
-docs/
-  requirements/
-    course-project.md             Supplied topic and course announcements
-    README.md                     Available sources and remaining inputs
-  design/
-    proposed-model.md             Suggested blogging model and five functions
-    change-log.md                 Submitted-baseline status and revision records
-  testing/
-    manual-checklist.md            User-run HTML, SQL, and application checks
-  context/
-    handoff.md                    Current project decisions and next steps
-    inventory-handoff.md          Superseded inventory-project handoff
-    claude-chat.pdf               Historical inventory conversation
-    claude-chat.txt               Searchable historical conversation
-  report/
-    part1.md                      Historical inventory report
-    part1.pdf                     Historical inventory PDF
+.
+|-- AGENTS.md
+|-- README.md
+|-- Project_Workflow.html          Offline study/build guide
+|-- design.md                      Handbook visual and UX rules
+|-- .gitignore                     Local scratch-file exclusions
+|-- database/README.md             SQL files, constraints and implementation order
+|-- server/README.md               Express/SQL/auth/service responsibilities
+|-- client/README.md               React TSX screens and API boundaries
+|-- agents/README.md               Independent scripted agent plan
+|-- diagrams/
+|   |-- README.md
+|   |-- chen-er.svg / .png
+|   `-- relational-schema.svg / .png
+`-- docs/
+    |-- context/
+    |   |-- handoff.md
+    |   |-- blogging-source-review.md
+    |   |-- blogging-source-manifest.json
+    |   |-- blogging-chat.txt
+    |   |-- repository-migration.md
+    |   `-- sources/blogging-claude-chat.pdf
+    |-- design/baseline.md / change-log.md
+    |-- requirements/README.md / course-project.md
+    |-- testing/manual-checklist.md
+    `-- presentation/
+        |-- README.md
+        `-- midsem/
+            |-- DBMS_Midsem_Slides.pptx
+            |-- Team_Slide_Guide.docx
+            |-- slides.txt
+            `-- team-guide.txt
 ```
 
-Read the [handoff](docs/context/handoff.md) and [agent instructions](AGENTS.md) before continuing. Original artifact filenames remain documented in the [historical handoff](docs/context/inventory-handoff.md#original-file-locations).
+The [database](database/README.md), [server](server/README.md), [client](client/README.md), and [agent](agents/README.md) directories currently contain useful implementation guides, not executable code or empty scripts. Add actual schema/seed/package/run/test files and commands when implementing their stages. See [presentation materials](docs/presentation/README.md) for the existing deck and later final-pitch work.
 
-## Design and implementation direction
+## Next work and verification
 
-Use a readable **Crow's Foot ER diagram**, with explicit keys, optionality, and cardinalities, plus a relational schema explaining normalization. If the actual submission uses Chen/EER, retain or map that conceptual view clearly. No particular notation was mandated in the supplied announcements.
+Reconcile the recovered model's technical review questions, preserve the actual submitted snapshot when identified, and prepare executable MySQL schema/seed SQL. Then implement both authentication paths, a scripted agent, the five functions, and their UI/API flows in small explainable steps. Build evidence as you go; adapt the existing mid-semester deck into a final product pitch later.
 
-The proposal covers human/agent identities, agent ownership, posts and revisions, comments, tags, and moderation. Its five suggested functions are agent registration, publishing, revising, commenting, and moderating. The [design note](docs/design/proposed-model.md) explains their transaction boundaries and failure cases.
-
-Use the chosen MySQL + React/Express/Node TypeScript/TSX + Tailwind stack. Match normalized tables, keys, constraints, and transaction boundaries to the submitted/revised ER model. Use one acquired MySQL connection for each logical transaction and release it after commit/rollback. Add source, database, test, and presentation directories as they contain real work. Document installation, migrations, seed data, configuration, and run commands here once available. Live model calls are optional unless a later requirement makes them necessary; agent-authored content can be demonstrated with reproducible fixtures.
-
-## Manual verification
-
-Follow [the manual testing checklist](docs/testing/manual-checklist.md). You run the browser and live MySQL checks yourself; agents should provide steps and expected outputs without taking over the laptop. HTML checks can run now; application tests and npm commands must wait until real code/scripts exist.
-
-## Completion checklist
-
-- [ ] Identify the submitted ER diagram, normalized schema, and existing PPT; resolve the topic mismatch.
-- [ ] Finalize blogging requirements, ER model, keys, constraints, and normalization rationale.
-- [ ] Justify design changes and align diagrams, schema, and implementation.
-- [ ] Implement database and application here with reproducible setup and demo data.
-- [ ] Implement five reusable functions with appropriate transactions and clear errors.
-- [ ] Verify success, rollback, repeated calls, constraints, and relevant concurrent edits.
-- [ ] Prepare the live demo, 10-minute pitch, and whole-team Q&A preparation.
-- [ ] Confirm evaluation date and submission details when announced.
+The user runs browser and live database checks. Agents provide instructions and expected outputs **without taking over the laptop/browser**. Text/link/syntax checks are inexpensive supporting verification. No automated browser control unless the user explicitly asks later.

@@ -1,0 +1,572 @@
+
+===== SLIDE 1 =====
+DBMS FOR A BLOGGING SITE FOR AI AGENTS AND HUMANS
+Mid-Semester Review: ER Diagram and Normalized Schema
+TEAM MEMBERS:
+[Name 1] – [Roll No.]
+[Name 2] – [Roll No.]
+[Name 3] – [Roll No.]
+[Name 4] – [Roll No.]
+Guided by: [Professor / TA name]
+humans  +  AI agents
+
+NOTES:
+Introduce the team and the project title.
+1
+
+===== SLIDE 2 =====
+INTRODUCTION
+Goal: a blogging platform where humans and AI agents both write posts, comment, vote, and suggest edits.
+Features:
+Human accounts and AI agent accounts; every agent is owned by a human
+Full revision history of every post
+Agents propose edits, humans approve them
+Comments, votes, tags, and citations
+Primary Goal
+Record who wrote every version of every post, human or AI.
+Design Principles
+Keys and constraints protect data integrity. Normalization up to BCNF removes redundancy. Database: MySQL 8.4.
+11
+entity sets
+14
+tables
+BCNF
+for every table
+
+NOTES:
+Humans use the website. AI agents use the same API with an API key. The key idea: the database can prove who wrote what.
+2
+
+===== SLIDE 3 =====
+ER DIAGRAM (CHEN NOTATION)
+
+NOTES:
+11 entity sets, 19 relationship sets, 2 weak entities (post_revision, revision_source), and one ISA hierarchy (actor → human_user, ai_agent).
+3
+
+===== SLIDE 4 =====
+TABLES (1/5): USERS AND AGENTS
+actor
+actor_id
+  (PK)
+handle
+display_name
+bio
+actor_type
+status
+created_at
+human_user
+actor_id
+  (PK, FK)
+email
+password_hash
+role
+ai_agent
+actor_id
+  (PK, FK)
+owner_id
+  (FK)
+model_name
+description
+is_verified
+Underlined = primary key (PK)     FK = foreign key
+
+NOTES:
+
+4
+
+===== SLIDE 5 =====
+TABLES (2/5): API KEYS AND TAGS
+api_key
+key_id
+  (PK)
+agent_id
+  (FK)
+key_prefix
+key_hash
+can_read
+can_post
+can_comment
+can_vote
+can_propose
+created_at
+last_used_at
+revoked_at
+tag
+tag_id
+  (PK)
+name
+post_tag
+post_id
+  (PK, FK)
+tag_id
+  (PK, FK)
+Underlined = primary key (PK)     FK = foreign key
+
+NOTES:
+
+5
+
+===== SLIDE 6 =====
+TABLES (3/5): POSTS AND REVISIONS
+post
+post_id
+  (PK)
+author_id
+  (FK)
+slug
+status
+created_at
+published_at
+post_revision
+post_id
+  (PK, FK)
+revision_no
+  (PK)
+editor_id
+  (FK)
+title
+body
+provenance
+change_note
+created_at
+revision_source
+post_id
+  (PK, FK)
+revision_no
+  (PK, FK)
+source_no
+  (PK)
+url
+cited_post_id
+  (FK)
+label
+Underlined = primary key (PK)     FK = foreign key
+
+NOTES:
+
+6
+
+===== SLIDE 7 =====
+TABLES (4/5): COMMENTS AND VOTES
+comment
+comment_id
+  (PK)
+post_id
+  (FK)
+author_id
+  (FK)
+parent_comment_id
+  (FK)
+body
+provenance
+status
+created_at
+post_vote
+actor_id
+  (PK, FK)
+post_id
+  (PK, FK)
+value
+voted_at
+comment_vote
+actor_id
+  (PK, FK)
+comment_id
+  (PK, FK)
+value
+voted_at
+Underlined = primary key (PK)     FK = foreign key
+
+NOTES:
+
+7
+
+===== SLIDE 8 =====
+TABLES (5/5): EDIT PROPOSALS AND AUDIT LOG
+edit_proposal
+proposal_id
+  (PK)
+proposer_id
+  (FK)
+post_id
+  (FK)
+base_revision_no
+  (FK)
+result_revision_no
+  (FK)
+reviewer_id
+  (FK)
+proposed_title
+proposed_body
+reason
+status
+created_at
+reviewed_at
+audit_log
+log_id
+  (PK)
+actor_id
+  (FK)
+action
+entity_type
+entity_id
+created_at
+Underlined = primary key (PK)     FK = foreign key
+
+NOTES:
+
+8
+
+===== SLIDE 9 =====
+WHY EACH TABLE EXISTS (1/3)
+actor
+Purpose:
+One row for every account, human or AI agent.
+Why needed:
+Posts, comments, votes, and edits all point to one actor_id, whoever made them.
+human_user
+Purpose:
+Login details and role of human users.
+Why needed:
+Only humans log in with a password, own agents, and approve edits.
+ai_agent
+Purpose:
+Details of each AI agent and its human owner.
+Why needed:
+Every agent must have a human who is accountable for it.
+api_key
+Purpose:
+Keys agents use to call the API, with five permission flags.
+Why needed:
+Only a hash of the key is stored, so a leaked database does not leak working keys.
+
+NOTES:
+
+9
+
+===== SLIDE 10 =====
+WHY EACH TABLE EXISTS (2/3)
+post
+Purpose:
+One row per post: author, slug, and status.
+Why needed:
+The fixed identity of a post. Its text lives in its revisions.
+post_revision
+Purpose:
+Every saved version of a post, with its editor and provenance.
+Why needed:
+Complete history of who wrote what. Nothing is overwritten.
+revision_source
+Purpose:
+Citations on a revision: a URL or another post.
+Why needed:
+Shows where an agent got its information.
+tag and post_tag
+Purpose:
+Topic labels, and which posts carry them.
+Why needed:
+post_tag resolves the many-to-many link between posts and tags.
+
+NOTES:
+
+10
+
+===== SLIDE 11 =====
+WHY EACH TABLE EXISTS (3/3)
+comment
+Purpose:
+Threaded comments on posts.
+Why needed:
+parent_comment_id lets a comment reply to another comment on the same post.
+post_vote and comment_vote
+Purpose:
+One +1 or −1 vote per actor per item.
+Why needed:
+The composite primary key stops anyone voting twice on the same item.
+edit_proposal
+Purpose:
+An edit suggested to a post, waiting for human review.
+Why needed:
+Agents propose, humans approve. Approval creates a new revision.
+audit_log
+Purpose:
+A record of important actions and who did them.
+Why needed:
+Accountability. Log rows stay even if the logged row is removed.
+
+NOTES:
+
+11
+
+===== SLIDE 12 =====
+NORMALIZATION: STARTING POINT (UNF)
+A first design keeps everything about a post in one row.
+The tags and revisions cells hold lists (repeating groups), so this table is not even in 1NF.
+Normalization fixes this step by step: 1NF → 2NF → 3NF → BCNF.
+BLOG_UNF
+post_id
+slug
+author_handle
+author_email
+tags
+revisions
+12
+train-delays
+priya
+priya@mail.com
+railways, data
+v1 by priya; v2 by priya; v3 by factbot (2 sources)
+15
+monsoon-model
+factbot
+(none)
+weather, ml
+v1 by factbot (1 source)
+
+NOTES:
+This is the bad design we start from, to show why our final tables look the way they do.
+12
+
+===== SLIDE 13 =====
+FIRST NORMAL FORM (1NF)
+Definition:
+All values are atomic and there are no repeating groups.
+Simple Explanation:
+Each cell holds only one value.
+No lists like "railways, data" in one column.
+Our Example:
+BLOG_UNF splits into R1, R2 (tags), and R3 (sources).
+FDs in R1:
+FD1: (post_id, revision_no) → title, body, editor_handle
+FD2: post_id → slug, author_handle
+FD3: author_handle → author_type, author_email
+FD4: editor_handle → editor_type
+R1
+post_id
+  (PK)
+revision_no
+  (PK)
+slug
+author_handle
+author_type
+author_email
+title
+body
+editor_handle
+editor_type
+R2
+post_id
+  (PK)
+tag_name
+  (PK)
+R3
+post_id
+  (PK)
+revision_no
+  (PK)
+source_no
+  (PK)
+source_url
+
+NOTES:
+
+13
+
+===== SLIDE 14 =====
+SECOND NORMAL FORM (2NF)
+Definition:
+In 1NF, and every non-key attribute depends on the whole primary key.
+Simple Explanation:
+Applies only when the key is composite.
+No column may depend on just part of the key.
+Our Example:
+R1's key is (post_id, revision_no).
+FD2: slug and author_handle depend on post_id alone → violates 2NF.
+Move them to a POST table.
+Still left: an author with 50 posts stores their email 50 times (FD3).
+POST
+post_id
+  (PK)
+slug
+author_handle
+author_type
+author_email
+POST_REVISION
+post_id
+  (PK)
+revision_no
+  (PK)
+title
+body
+editor_handle
+editor_type
+
+NOTES:
+
+14
+
+===== SLIDE 15 =====
+THIRD NORMAL FORM (3NF)
+Definition:
+In 2NF, and there are no transitive dependencies.
+Simple Explanation:
+A non-key attribute must not depend on another non-key attribute.
+Every column depends only on the key.
+Our Example:
+post_id → author_handle → author_email violates 3NF.
+Author and editor details move to an ACTOR table.
+ACTOR then splits into HUMAN_USER and AI_AGENT, and actor_id becomes its key.
+ACTOR
+handle
+  (PK)
+actor_type
+email
+POST
+post_id
+  (PK)
+slug
+author_handle
+  (FK)
+POST_REVISION
+post_id
+  (PK, FK)
+revision_no
+  (PK)
+title
+body
+editor_handle
+  (FK)
+
+NOTES:
+
+15
+
+===== SLIDE 16 =====
+BOYCE-CODD NORMAL FORM (BCNF)
+Definition:
+Every determinant is a candidate key.
+Simple Explanation:
+A stricter 3NF.
+It matters when a table has overlapping candidate keys.
+Our Example:
+POST_TAG_V (post_id, tag_id, tag_name): tag_id → tag_name, but tag_id alone is not a key.
+Renaming a tag would mean updating every post that uses it.
+Split into TAG and POST_TAG.
+POST_TAG_V
+post_id
+  (PK)
+tag_id
+  (PK)
+tag_name
+TAG
+tag_id
+  (PK)
+name
+POST_TAG
+post_id
+  (PK, FK)
+tag_id
+  (PK, FK)
+
+NOTES:
+
+16
+
+===== SLIDE 17 =====
+FINAL NORMALIZED SCHEMA
+
+NOTES:
+14 tables. Each line goes from a foreign key to the key it references. Crow's foot marks the many side.
+17
+
+===== SLIDE 18 =====
+HOW OUR SCHEMA MEETS EACH NORMAL FORM
+1NF
+Every column holds one value. Agent permissions are five separate columns, not a list.
+2NF
+In tables with composite keys (post_revision, revision_source, post_tag, post_vote, comment_vote), every column depends on the whole key.
+3NF
+No column depends on a non-key column. ai_agent stores owner_id, not the owner's email.
+BCNF
+The only other determinants (handle, email, key_hash, slug, name) are unique, so each is a candidate key.
+
+NOTES:
+
+18
+
+===== SLIDE 19 =====
+FD CHECK: ALL 14 TABLES IN BCNF
+Table
+Functional dependencies
+Candidate keys
+BCNF
+actor
+actor_id → rest; handle → actor_id
+actor_id, handle
+Yes
+human_user
+actor_id → rest; email → actor_id
+actor_id, email
+Yes
+ai_agent
+actor_id → rest
+actor_id
+Yes
+api_key
+key_id → rest; key_hash → key_id
+key_id, key_hash
+Yes
+post
+post_id → rest; slug → post_id
+post_id, slug
+Yes
+post_revision
+(post_id, revision_no) → rest
+(post_id, revision_no)
+Yes
+revision_source
+(post_id, revision_no, source_no) → rest
+(post_id, revision_no, source_no)
+Yes
+tag
+tag_id → name; name → tag_id
+tag_id, name
+Yes
+post_tag
+none (all key)
+(post_id, tag_id)
+Yes
+comment
+comment_id → rest
+comment_id
+Yes
+post_vote
+(actor_id, post_id) → value, voted_at
+(actor_id, post_id)
+Yes
+comment_vote
+(actor_id, comment_id) → value, voted_at
+(actor_id, comment_id)
+Yes
+edit_proposal
+proposal_id → rest
+proposal_id
+Yes
+audit_log
+log_id → rest
+log_id
+Yes
+"rest" = all other columns of that table
+
+NOTES:
+
+19
+
+===== SLIDE 20 =====
+THANK YOU
+Questions?
+
+NOTES:
+
+20

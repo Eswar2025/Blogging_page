@@ -53,13 +53,16 @@ A successful project is not just about building a database that works. It is abo
 
 P.S. CRs are requested to finalise the possible days for the end-semester evaluations and share asap so that we can schedule accordingly.
 
-## User clarifications and interpretation
+## Current user clarifications and recovered design
 
-- This repository will contain all future coding and deliverables.
-- The user has chosen **SQL/MySQL only**, because this is a course project and SQL is currently familiar to them. Keep React TypeScript/TSX, Tailwind CSS, Node, and Express. The earlier document-database stack preference is superseded. Their workflow involves prompting Codex, verifying outputs, debugging, and creating presentations. They requested a detailed offline guide following `design.md`, for about one hour of study/discussion rather than one hour of implementation.
-- The user will run browser and database verification themselves. Provide instructions and expected results; do not take over their laptop/browser or use GUI automation unless explicitly requested later.
-- No professor example ER diagram exists; a suitable notation/model may be suggested.
-- The user identifies the Claude-created ER diagrams and another PPT as previous work and permits changes if needed. The available diagrams/report describe inventory management, while the allotted title is blogging. The actual submitted baseline needs reconciling; the PPT is not present here.
-- Design changes require technical justification. The announcement does not specify a separate approval process.
-- Five reusable functions, atomic interdependent operations, failure handling, ER fidelity, a live demo, and a 10-minute pitch plus Q&A are requirements. Specific blogging features and function names are proposals.
-- No final deadline, evaluation date, team size, course-mandated DBMS/framework, or fixed target normal form was supplied. The user's confirmed MySQL choice is recorded separately from course mandates; database selection is settled, while installed version and dependency versions remain to be recorded. A normalized schema needs a defensible dependency/normalization explanation; 3NF is our suggested target, subject to course expectations.
+- The correct blogging artifacts were supplied in `Right Contxt Files/` and are now organized under `docs/context/sources/` (chat), `diagrams/` (both diagram pairs), and `docs/presentation/midsem/` (PPTX/team guide and extracts). Original content is preserved. See [source review](../context/blogging-source-review.md) and [exact-column baseline](../design/baseline.md).
+- The user explicitly requested removal of obsolete files and a useful implementation structure. The unrelated inventory artifacts, earlier proposal and redundant pointer were removed from the working tree; [the migration note](../context/repository-migration.md) records paths and recoverable history. database/server/client/agents now contain implementation guides, not executable placeholders.
+- The settled baseline has 14 tables, 11 conceptual entity sets and two weak entities. Actor identities, scoped API keys, agent ownership, revisions/provenance/citations, threaded comments, separate post/comment votes, human-reviewed edit proposals and audit history define the product. Earlier 12/18-table drafts and the local nine-table proposal are superseded.
+- Humans use login/session UI; agents use their own API credentials. Remove the required browser author-selector assumption. Moderator status permissions can remain; a dedicated moderation queue and flag/follow tables were cut.
+- The user chooses SQL/MySQL only, React TSX/Tailwind, Node/Express TypeScript, readable parameterized SQL. This overrides the old chat's vanilla/no-TypeScript suggestion. Actual installed versions remain to be recorded; the sources recommend MySQL 8.4.
+- No professor sample ER diagram or longer problem statement was supplied. Use the existing Chen model and separate Crow's Foot schema, not a newly invented professor template.
+- Preserve source artifacts and justify actual ER/schema deviations. File presence does not certify submission version or professor approval.
+- User runs browser/database tests. Provide manual steps and expected outputs without GUI automation/laptop control unless explicitly requested later.
+- Five meaningful reusable functions, consistent transactions, useful errors, fidelity, live demo and ten-minute pitch/Q&A are course requirements. Current proposed operation choices are publishPost, addComment, castVote, submitEditProposal and reviewEditProposal; supporting auth/agent/key/read/search operations are still needed.
+- The old chat describes largely solo development and later friends helping with slides. Four name placeholders are not proof of four members. Confirm identities when preparing deliverables.
+- No final date or final-submission deadline is supplied. The mid-semester slides claim BCNF, but the actual FDs/constraints need verification; do not label that claim a newly completed proof. Session/rate-limit infrastructure must not silently expand the 14-table academic model.
